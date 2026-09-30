@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fineprint-document": {
+      "command": "node",
+      "args": ["packages/mcp-document/dist/server.js"]
+    }
+  }
+}
