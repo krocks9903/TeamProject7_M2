@@ -2,622 +2,490 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>CEN 4930 M2 — FinePrint Agent — Team DNK</title>
+<title>TeamProject7 M2 Report</title>
 <style>
-  @page { size: letter; margin: 0.85in; }
+  @page { size: letter; margin: 0.8in 0.85in; }
   * { box-sizing: border-box; }
   body {
-    font-family: "Times New Roman", Times, serif;
-    font-size: 11.5pt;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 11pt;
     line-height: 1.45;
     color: #111;
-    max-width: 7in;
-    margin: 0 auto;
+    margin: 0;
+    background: #fff;
   }
-  h1 { font-size: 18pt; margin: 0 0 0.35em; text-align: center; }
-  h2 { font-size: 14pt; margin: 1.4em 0 0.45em; border-bottom: 1px solid #333; padding-bottom: 0.15em; page-break-after: avoid; }
-  h3 { font-size: 12pt; margin: 1em 0 0.35em; page-break-after: avoid; }
-  p, li { margin: 0.4em 0; }
-  .meta { text-align: center; font-size: 10.5pt; margin-bottom: 1.2em; }
-  .subtitle { text-align: center; font-size: 12pt; margin: 0.2em 0; }
+  h1, h2, h3, th, .label, .cover-meta { font-family: "Segoe UI", Helvetica, Arial, sans-serif; }
+  h1 { font-size: 22pt; margin: 0 0 0.2em; color: #14213d; }
+  h2 { font-size: 15pt; margin: 1.3em 0 0.5em; color: #14213d; border-bottom: 2px solid #14213d; padding-bottom: 0.15em; page-break-after: avoid; }
+  h3 { font-size: 12pt; margin: 1.1em 0 0.35em; color: #1d3557; page-break-after: avoid; }
+  p, li { margin: 0.35em 0; }
+  ul, ol { margin: 0.3em 0 0.6em 1.3em; padding: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; line-height: 1.35; margin: 0.6em 0 0.3em; }
+  tr { page-break-inside: avoid; }
+  th, td { border: 1px solid #9aa3ad; padding: 4px 6px; vertical-align: top; text-align: left; }
+  th { background: #14213d; color: #fff; font-weight: 600; font-size: 8.8pt; }
+  tbody tr:nth-child(even) td { background: #f4f6f8; }
+  .mono, code { font-family: Consolas, Menlo, monospace; font-size: 9pt; }
   .small { font-size: 9.5pt; }
-  .muted { color: #333; }
-  table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin: 0.6em 0 1em; page-break-inside: avoid; }
-  th, td { border: 1px solid #444; padding: 4px 5px; vertical-align: top; text-align: left; }
-  th { background: #eee; font-weight: bold; }
-  .bmc th { width: 22%; }
-  ul { margin: 0.3em 0 0.6em 1.2em; padding: 0; }
+  .muted { color: #444; }
   .page-break { page-break-before: always; }
-  .fig { text-align: center; margin: 1em 0; page-break-inside: avoid; }
-  .fig svg { max-width: 100%; height: auto; }
-  .caption { font-size: 9.5pt; font-style: italic; margin-top: 0.35em; }
-  .callout { border: 1px solid #444; padding: 0.55em 0.7em; margin: 0.7em 0; background: #f7f7f7; }
-  a { color: #000; text-decoration: none; }
-  .sources li { margin: 0.25em 0; font-size: 9pt; }
-  code, .mono { font-family: Menlo, Consolas, monospace; font-size: 9pt; }
-  .toc ol { margin-left: 1.4em; }
+  .callout { border-left: 4px solid #14213d; background: #f1f4f8; padding: 0.55em 0.8em; margin: 0.8em 0; font-size: 10pt; }
+  .sources { font-size: 8.6pt; line-height: 1.35; margin: 0.25em 0 1em; padding: 0.5em 0.7em; border: 1px solid #c9d0d8; background: #fafbfc; page-break-inside: avoid; }
+  .sources p.label { margin: 0 0 0.25em; font-weight: 700; font-size: 8.8pt; color: #14213d; }
+  .sources ol { margin: 0 0 0 1.4em; }
+  .sources li { margin: 0.12em 0; word-break: break-word; }
+  .fig { margin: 0.8em 0; text-align: center; page-break-inside: avoid; }
+  .fig img { width: 100%; border: 1px solid #c9d0d8; }
+  .caption { font-size: 9pt; font-style: italic; margin-top: 0.35em; text-align: left; }
+  .cover { text-align: left; padding-top: 1.2in; }
+  .cover .kicker { font-family: "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; font-size: 10pt; color: #1d3557; margin-bottom: 0.6em; }
+  .cover .sub { font-size: 14pt; color: #333; margin: 0.2em 0 1.4em; }
+  .cover-meta { font-size: 10.5pt; line-height: 1.6; border-top: 1px solid #9aa3ad; padding-top: 0.8em; }
+  .cover-meta td, .cover-meta th { border: none; padding: 2px 10px 2px 0; background: none !important; color: #111; font-size: 10.5pt; }
+  .cover-meta th { width: 1.6in; font-weight: 600; color: #1d3557; }
+  .toc { font-size: 10.5pt; margin-top: 1.6em; }
+  .toc p { margin: 0.3em 0; } .toc .ind { margin-left: 1.6em; color: #333; font-size: 10pt; }
+  .bmc td:first-child { width: 20%; font-weight: 600; font-family: "Segoe UI", Helvetica, Arial, sans-serif; }
+  .tag { display: inline-block; font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 7.5pt; padding: 0 4px; border: 1px solid #777; border-radius: 3px; color: #333; margin-left: 3px; }
 </style>
 </head>
 <body>
 
-<h1>CEN 4930 — AI Agent Studio</h1>
-<p class="subtitle"><strong>Milestone 2: Agent Prototype v1 + Market Research</strong></p>
-<p class="subtitle">FinePrint Agent — Document Stipulation &amp; Money-Loss Scanner</p>
-<p class="meta">
-  Team DNK · Krish Shah, Nolan Stillwell, Diego Guatarasma<br/>
-  Instructor: Dr. Vinod Kumar Ahuja · Florida Gulf Coast University · Fall 2026<br/>
-  Submitted: September 22, 2026
-</p>
+<!-- ============================ COVER ============================ -->
+<section class="cover">
+  <p class="kicker">CEN 4930 · AI Agent Studio · Milestone 2</p>
+  <h1>FinePrint Agent</h1>
+  <p class="sub">Agent Prototype v1 + Market Research<br/>A grounded money-loss scanner for leases and consumer contracts</p>
 
-<p class="callout small">
-  <strong>GitHub repository:</strong> https://github.com/krocks9903/FInePrint-Agent<br/>
-  <strong>Prototype branch:</strong> <span class="mono">agent-architecture</span><br/>
-  <strong>Format note:</strong> This PDF is the graded M2 report (architecture + market research). Working code, MCP tool, tests, and README live in the repository linked above.
-</p>
+  <table class="cover-meta">
+    <tr><th>Team</th><td>Team DNK</td></tr>
+    <tr><th>Members</th><td>Krish Shah · Nolan Stillwell · Diego Guatarasma</td></tr>
+    <tr><th>Instructor</th><td>Dr. Vinod Kumar Ahuja · Florida Gulf Coast University</td></tr>
+    <tr><th>Term</th><td>Fall 2026</td></tr>
+    <tr><th>Repository</th><td class="mono">https://github.com/krocks9903/TeamProject7_M2</td></tr>
+    <tr><th>Branch</th><td class="mono">main</td></tr>
+  </table>
 
-<h2>Table of Contents</h2>
-<ol class="toc small">
-  <li>Part 1 — Agent Prototype v1
-    <ol>
-      <li>Prototype summary &amp; repository</li>
-      <li>Architecture diagram</li>
-      <li>Agent persona, MCP tool, and citation guardrail</li>
-      <li>Test cases</li>
-      <li>Known limitations</li>
-    </ol>
-  </li>
-  <li>Part 2 — Market Research
-    <ol>
-      <li>Competitive landscape</li>
-      <li>Market size + opportunity</li>
-      <li>Business Model Canvas (first draft)</li>
-    </ol>
-  </li>
-  <li>Appendix — Sources</li>
-</ol>
+  <div class="toc">
+    <strong>Contents</strong>
+    <p>1&nbsp;&nbsp;Summary</p>
+    <p>2&nbsp;&nbsp;Part 1: Agent Prototype v1</p>
+    <p class="ind">2.1 What the prototype does · 2.2 Architecture diagram · 2.3 Persona, MCP tool, and citation guardrail · 2.4 Test cases and results · 2.5 Not implemented yet, and known limitations · 2.6 Setup and team ownership</p>
+    <p>3&nbsp;&nbsp;Part 2: Market Research</p>
+    <p class="ind">3.1 Competitive landscape · 3.2 Market size and opportunity · 3.3 Business Model Canvas (first draft) · 3.4 Market risk register</p>
+    <p>4&nbsp;&nbsp;Conclusion</p>
+  </div>
+</section>
 
-<!-- ===================== PART 1 ===================== -->
-<h2>Part 1 — Agent Prototype v1</h2>
-
-<h3>1.1 Prototype summary &amp; repository</h3>
+<!-- ============================ SUMMARY ============================ -->
+<div class="page-break"></div>
+<h2>1. Summary</h2>
 <p>
-  FinePrint Agent is a <strong>single-tool agent</strong> that accepts an uploaded lease or contract PDF and returns a
-  <strong>ranked list of money-loss risks</strong>. Every finding must include a verbatim quote and page number.
-  Findings whose quotes cannot be located in the parsed document text are <strong>dropped</strong> (fail closed).
+  People sign leases, gym memberships, phone plans, and loan paperwork without reading past the first page.
+  The clauses that cost money (early-termination fees, automatic renewals, notice windows, deposit forfeiture)
+  stay buried until the money is already gone. FinePrint Agent reads the PDF before you sign and returns a short,
+  ranked list of the ways that document can take your money. Each item quotes the exact sentence and gives its page number.
 </p>
 <p>
-  The M2 vertical slice is implemented as a TypeScript monorepo on branch <span class="mono">agent-architecture</span>:
+  The M2 prototype is a working single-tool agent. A user uploads a PDF. An MCP tool (<span class="mono">document_parse</span>)
+  turns it into page-mapped text. The agent persona extracts candidate risks as structured JSON. A deterministic citation
+  validator then drops any finding whose quote does not appear in the source page. Nothing ungrounded reaches the user.
+  All three graded test cases pass, including a hallucination trap that plants an invented $2,000 fee.
 </p>
-<ul>
-  <li><span class="mono">apps/web</span> — Next.js upload UI and scan APIs</li>
-  <li><span class="mono">packages/shared</span> — shared contracts (<span class="mono">RiskFinding</span>, scan statuses)</li>
-  <li><span class="mono">packages/mcp-document</span> — MCP tool <span class="mono">document_parse</span></li>
-  <li><span class="mono">packages/agent</span> — provider wrapper, persona, orchestrator, citation validator, local store</li>
-  <li><span class="mono">supabase/migrations</span> — Postgres + RLS schema for the cloud path</li>
-  <li><span class="mono">tests/</span> — graded pipeline tests including a hallucination trap</li>
-</ul>
 <p>
-  Model stack (unchanged from M1): primary <strong>NRP open LLM</strong> (<span class="mono">gpt-oss</span>, OpenAI-compatible),
-  fallback Anthropic via <span class="mono">MODEL_PROVIDER</span>, and <span class="mono">mock</span> for offline teammate onboarding and CI.
+  On the market side, we mapped seven existing solutions: four AI lease reviewers, a prepaid-attorney plan, a human tenant
+  attorney, and the status quo of signing without reading. We sized the opportunity from U.S. Census renter data and two
+  analyst reports on AI contract review, and drafted all nine blocks of a Business Model Canvas. Our wedge is narrow on
+  purpose. FinePrint works across document types, requires a quote for every claim, and gives no legal advice.
 </p>
 
-<h3>1.2 Architecture diagram</h3>
-<p>
-  Figure 1 labels the five elements required by the M2 rubric: user input, model backend, agent persona/instructions,
-  MCP tools, and output. Solid boxes are <strong>Live (M2)</strong>. Dashed boxes are <strong>Planned (M3+)</strong>
-  and are intentionally not required to run for this milestone.
-</p>
-
-<div class="fig">
-<svg viewBox="0 0 740 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FinePrint architecture diagram">
-  <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-      <path d="M0,0 L6,3 L0,6 Z" fill="#222"/>
-    </marker>
-  </defs>
-  <rect x="1" y="1" width="738" height="418" fill="#fff" stroke="#222" stroke-width="1"/>
-  <text x="20" y="28" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700">FinePrint Agent — M2 Architecture (Live vs Planned)</text>
-  <text x="20" y="48" font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#444">Solid = Live (M2) · Dashed = Planned (M3+)</text>
-
-  <!-- User -->
-  <rect x="30" y="80" width="120" height="54" rx="6" fill="#f3f3f3" stroke="#222"/>
-  <text x="90" y="102" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">User input</text>
-  <text x="90" y="118" text-anchor="middle" font-family="Helvetica" font-size="9">PDF upload</text>
-  <text x="90" y="130" text-anchor="middle" font-family="Helvetica" font-size="8">“what can this cost me?”</text>
-
-  <!-- Next.js -->
-  <rect x="190" y="80" width="130" height="54" rx="6" fill="#f3f3f3" stroke="#222"/>
-  <text x="255" y="102" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">Next.js / Vercel</text>
-  <text x="255" y="118" text-anchor="middle" font-family="Helvetica" font-size="9">API route handlers</text>
-  <text x="255" y="130" text-anchor="middle" font-family="Helvetica" font-size="8">no LLM keys in browser</text>
-
-  <!-- Orchestrator -->
-  <rect x="360" y="70" width="150" height="74" rx="6" fill="#e8eef7" stroke="#222"/>
-  <text x="435" y="92" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">Scan Orchestrator</text>
-  <text x="435" y="108" text-anchor="middle" font-family="Helvetica" font-size="9">queued→parse→analyze</text>
-  <text x="435" y="122" text-anchor="middle" font-family="Helvetica" font-size="9">→validate→done</text>
-  <text x="435" y="136" text-anchor="middle" font-family="Helvetica" font-size="8">content-hash cache</text>
-
-  <!-- MCP -->
-  <rect x="550" y="40" width="160" height="58" rx="6" fill="#e8f5e9" stroke="#222"/>
-  <text x="630" y="62" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">MCP tool</text>
-  <text x="630" y="78" text-anchor="middle" font-family="Helvetica" font-size="9">document_parse</text>
-  <text x="630" y="92" text-anchor="middle" font-family="Helvetica" font-size="8">PDF → page-mapped text</text>
-
-  <!-- Agent -->
-  <rect x="550" y="115" width="160" height="70" rx="6" fill="#fff3e0" stroke="#222"/>
-  <text x="630" y="137" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">Agent persona</text>
-  <text x="630" y="153" text-anchor="middle" font-family="Helvetica" font-size="8">stipulation / money-loss</text>
-  <text x="630" y="167" text-anchor="middle" font-family="Helvetica" font-size="8">scanner; doc = data;</text>
-  <text x="630" y="179" text-anchor="middle" font-family="Helvetica" font-size="8">quote only</text>
-
-  <!-- Model -->
-  <rect x="550" y="205" width="160" height="58" rx="6" fill="#fce4ec" stroke="#222"/>
-  <text x="630" y="227" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">Model backend</text>
-  <text x="630" y="243" text-anchor="middle" font-family="Helvetica" font-size="9">NRP gpt-oss</text>
-  <text x="630" y="257" text-anchor="middle" font-family="Helvetica" font-size="8">MODEL_PROVIDER swap</text>
-
-  <!-- Validator -->
-  <rect x="360" y="200" width="150" height="58" rx="6" fill="#e8eef7" stroke="#222"/>
-  <text x="435" y="222" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">Citation Validator</text>
-  <text x="435" y="238" text-anchor="middle" font-family="Helvetica" font-size="9">quote ⊆ page text</text>
-  <text x="435" y="252" text-anchor="middle" font-family="Helvetica" font-size="8">ungrounded → dropped</text>
-
-  <!-- Output -->
-  <rect x="190" y="200" width="130" height="58" rx="6" fill="#f3f3f3" stroke="#222"/>
-  <text x="255" y="222" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">Agent output</text>
-  <text x="255" y="238" text-anchor="middle" font-family="Helvetica" font-size="9">ranked RiskFinding[]</text>
-  <text x="255" y="252" text-anchor="middle" font-family="Helvetica" font-size="8">quote + page + severity</text>
-
-  <!-- Store -->
-  <rect x="30" y="200" width="120" height="58" rx="6" fill="#f3f3f3" stroke="#222"/>
-  <text x="90" y="222" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700">Storage</text>
-  <text x="90" y="238" text-anchor="middle" font-family="Helvetica" font-size="9">LocalStore (M2)</text>
-  <text x="90" y="252" text-anchor="middle" font-family="Helvetica" font-size="8">or Supabase</text>
-
-  <!-- Planned -->
-  <rect x="30" y="300" width="200" height="90" rx="6" fill="#fff" stroke="#666" stroke-dasharray="5 4"/>
-  <text x="130" y="322" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700" fill="#444">Planned M3+</text>
-  <text x="130" y="340" text-anchor="middle" font-family="Helvetica" font-size="9" fill="#444">Supabase Auth UI</text>
-  <text x="130" y="356" text-anchor="middle" font-family="Helvetica" font-size="9" fill="#444">pgvector retrieval</text>
-  <text x="130" y="372" text-anchor="middle" font-family="Helvetica" font-size="9" fill="#444">Extractor → Ranker agents</text>
-
-  <rect x="260" y="300" width="450" height="90" rx="6" fill="#fff" stroke="#666" stroke-dasharray="5 4"/>
-  <text x="485" y="322" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="700" fill="#444">Security / efficiency (live now)</text>
-  <text x="485" y="342" text-anchor="middle" font-family="Helvetica" font-size="9" fill="#444">PDF allowlist + size cap · server-only secrets · prompt treats document as untrusted data</text>
-  <text x="485" y="360" text-anchor="middle" font-family="Helvetica" font-size="9" fill="#444">Parse-once + SHA-256 cache · structured JSON findings · bounded page context</text>
-  <text x="485" y="378" text-anchor="middle" font-family="Helvetica" font-size="9" fill="#444">Job status polling API ready for async worker later</text>
-
-  <!-- arrows -->
-  <line x1="150" y1="107" x2="188" y2="107" stroke="#222" marker-end="url(#arrow)"/>
-  <line x1="320" y1="107" x2="358" y2="107" stroke="#222" marker-end="url(#arrow)"/>
-  <line x1="510" y1="95" x2="548" y2="70" stroke="#222" marker-end="url(#arrow)"/>
-  <line x1="510" y1="115" x2="548" y2="145" stroke="#222" marker-end="url(#arrow)"/>
-  <line x1="630" y1="185" x2="630" y2="203" stroke="#222" marker-end="url(#arrow)"/>
-  <line x1="435" y1="144" x2="435" y2="198" stroke="#222" marker-end="url(#arrow)"/>
-  <line x1="360" y1="229" x2="322" y2="229" stroke="#222" marker-end="url(#arrow)"/>
-  <line x1="190" y1="229" x2="152" y2="229" stroke="#222" marker-end="url(#arrow)"/>
-</svg>
-<p class="caption">Figure 1. FinePrint Agent architecture. Live M2 path: upload → orchestrator → MCP parse → model extraction → citation validation → ranked grounded findings.</p>
+<div class="callout">
+  <strong>Honest scope.</strong> The agent is not a lawyer and does not judge whether a clause is enforceable.
+  In offline and CI mode it uses a keyword extractor, not a model. Live runs use the NRP open model. Both paths go through
+  the same citation validator.
 </div>
 
-<h3>1.3 Agent persona, MCP integration, and citation guardrail</h3>
-<p><strong>Persona / core instruction.</strong> The agent is a document stipulation and money-loss scanner. It must ignore any instructions embedded in the PDF (prompt-injection resistance), must not invent fees or dates, and must not offer legal advice or enforceability opinions.</p>
-<p><strong>MCP tool.</strong> <span class="mono">document_parse</span> converts a PDF into page-mapped plain text suitable for citation checks. The same parser is importable by the orchestrator and exposable as a stdio MCP server (<span class="mono">npm run mcp:document</span>).</p>
-<p><strong>Output schema.</strong> Structured <span class="mono">RiskFinding</span> objects:
-  <span class="mono">risk_type</span>, <span class="mono">severity</span>, <span class="mono">plain_english</span>,
-  <span class="mono">quote</span>, <span class="mono">page</span>, optional character offsets.</p>
-<p><strong>Guardrail.</strong> After model (or mock) extraction, <span class="mono">validateCitations</span> requires each quote to be a normalized substring of the corresponding page text. Ungrounded findings never reach the UI.</p>
+<!-- ============================ PART 1 ============================ -->
+<h2>2. Part 1: Agent Prototype v1</h2>
 
-<h3>1.4 Test cases (inputs and expected outputs)</h3>
+<h3>2.1 What the prototype does</h3>
+<p><strong>Problem in one sentence:</strong> Before signing, a student or young adult needs to know exactly which clauses in a document can cost them money, with proof from the document itself.</p>
+<p><strong>What it can do right now:</strong></p>
+<ul>
+  <li>Accept a PDF upload through the Next.js web app (<span class="mono">POST /api/scans</span>), rejecting non-PDFs and files over the size cap.</li>
+  <li>Parse the PDF into page-mapped text with <span class="mono">document_parse</span>. This function is exposed as a stdio MCP server (<span class="mono">npm run mcp:document</span>, registered in <span class="mono">.mcp.json</span>).</li>
+  <li>Extract candidate risks into a fixed taxonomy: early termination, auto-renewal, deposit forfeiture, late fee, notice window, liability shift, mandatory arbitration, fee trap, and other.</li>
+  <li>Validate every quote against its page text and drop anything that is not a verbatim match (fail closed).</li>
+  <li>Rank grounded findings by severity and return them through <span class="mono">GET /api/scans/:id</span>, without sending the full page text back to the browser.</li>
+  <li>Skip repeat work: a SHA-256 hash of the file, the prompt version, and the model id form a cache key.</li>
+</ul>
+
+<p><strong>Repository layout</strong> (TypeScript monorepo):</p>
 <table>
-  <thead>
-    <tr>
-      <th style="width:12%">Case</th>
-      <th style="width:34%">Input</th>
-      <th>Expected output</th>
-    </tr>
-  </thead>
+  <thead><tr><th style="width:30%">Path</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">apps/web</td><td>Next.js upload UI and API route handlers</td></tr>
+    <tr><td class="mono">packages/shared</td><td>Shared contracts: <span class="mono">RiskFinding</span>, scan statuses, constants</td></tr>
+    <tr><td class="mono">packages/mcp-document</td><td>PDF parser and the MCP server exposing <span class="mono">document_parse</span></td></tr>
+    <tr><td class="mono">packages/agent</td><td>Model provider wrapper, persona, orchestrator, citation validator, local store</td></tr>
+    <tr><td class="mono">supabase/migrations</td><td>Postgres schema with row-level security for the cloud path</td></tr>
+    <tr><td class="mono">tests/</td><td>Graded pipeline tests and synthetic PDF fixtures</td></tr>
+    <tr><td class="mono">datasets/</td><td>39 real-world PDFs (leases, gym contracts, loan notes, wireless agreements, CUAD contracts) for later evaluation</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Model stack</strong> (unchanged from M1): primary is the NRP open LLM (<span class="mono">gpt-oss</span>, OpenAI-compatible API).
+A paid Anthropic API fallback is selected with <span class="mono">MODEL_PROVIDER</span>, and a <span class="mono">mock</span> provider covers offline onboarding and CI.
+All model calls go through one file (<span class="mono">packages/agent/src/provider.ts</span>), so switching providers takes an environment variable change, not a code change.</p>
+
+<div class="page-break"></div>
+<h3>2.2 Architecture diagram</h3>
+<div class="fig">
+  <img src="architecture-m2.png" alt="FinePrint Agent M2 architecture diagram" />
+  <p class="caption">Figure 1. FinePrint Agent M2 architecture. Solid borders run today; the dashed box is planned for M3 and later. The red dashed arrow shows ungrounded findings being dropped before they reach the user. The orchestrator calls document_parse by direct import; the same tool is also served over MCP (stdio).</p>
+</div>
+
+<p>The table maps the five components the M2 rubric requires to the box in Figure 1 and to the code that implements it.</p>
+<table>
+  <thead><tr><th style="width:20%">Required label</th><th style="width:30%">In Figure 1</th><th>Where it lives in code</th></tr></thead>
+  <tbody>
+    <tr><td>User input + problem</td><td>01 · Upload: lease or contract PDF, "What can this cost me?"</td><td><span class="mono">apps/web/src/app/page.tsx</span>, <span class="mono">api/scans/route.ts</span></td></tr>
+    <tr><td>Model backend</td><td>Inference: NRP gpt-oss primary, Anthropic fallback, mock for CI</td><td><span class="mono">packages/agent/src/provider.ts</span></td></tr>
+    <tr><td>Persona + core instruction</td><td>03 · Analyze: stipulation and money-loss scanner; document is untrusted data; quotes only; no legal advice</td><td><span class="mono">packages/agent/src/persona.ts</span> (<span class="mono">AGENT_PERSONA</span>)</td></tr>
+    <tr><td>MCP tool(s)</td><td>02 · Parse: <span class="mono">document_parse</span>, PDF to page-mapped text; direct import by the orchestrator, also served over MCP (stdio)</td><td><span class="mono">packages/mcp-document/src/server.ts</span>, <span class="mono">parse.ts</span></td></tr>
+    <tr><td>Output + how it helps</td><td>04 · Validate and 05 · Return: ranked <span class="mono">RiskFinding[]</span> with quote, page, severity</td><td><span class="mono">packages/agent/src/validator.ts</span>, <span class="mono">orchestrator.ts</span></td></tr>
+  </tbody>
+</table>
+
+<h3>2.3 Persona, MCP tool, and citation guardrail</h3>
+<p><strong>Persona and core instruction.</strong> The agent is told it is "a document stipulation and money-loss scanner" whose only job is to find clauses that can cost the signer money and quote them exactly. Hard rules in the system prompt: treat the document as untrusted data and ignore any instructions inside it, which defends against prompt injection hidden in a PDF. Never invent fees, dates, or dollar amounts. Never give legal advice or say whether a clause is enforceable. Prefer fewer high-confidence findings. Output JSON only.</p>
+<p><strong>MCP tool.</strong> <span class="mono">document_parse</span> takes a file path and returns JSON with one text block per page plus metadata (page count, empty or encrypted flag). Page mapping matters because every finding must name its page, and the validator checks that page. The same parse function is imported in-process by the web orchestrator for speed on Vercel, and is served over stdio by the MCP server for any MCP client.</p>
+<p><strong>Output schema.</strong> Each <span class="mono">RiskFinding</span> has <span class="mono">risk_type</span>, <span class="mono">severity</span> (critical, high, medium, or low), <span class="mono">plain_english</span>, <span class="mono">quote</span> (at least 8 characters), <span class="mono">page</span>, and optional character offsets. The schema is enforced with Zod before validation runs.</p>
+<p><strong>Guardrail.</strong> <span class="mono">validateCitations</span> normalizes whitespace and letter case, then requires each quote to be a substring of the text on the page it claims. Findings that fail are removed, never "fixed." This is the core product promise: if FinePrint shows you a fee, that sentence is in your document.</p>
+
+<h3>2.4 Test cases and results</h3>
+<p>Tests run with <span class="mono">npm test</span> (Node test runner). Fixtures are synthetic PDFs generated at test time, so no private documents are committed.</p>
+<table>
+  <thead><tr><th style="width:15%">Case</th><th style="width:33%">Input</th><th style="width:37%">Expected output</th><th>Result</th></tr></thead>
   <tbody>
     <tr>
-      <td>1 — Golden lease</td>
-      <td>Synthetic residential lease PDF containing early-termination fee, auto-renewal, late fee, and deposit forfeiture language</td>
-      <td>Status <span class="mono">done</span>; grounded findings include <span class="mono">early_termination</span> and <span class="mono">auto_renewal</span>; every finding has <span class="mono">grounded=true</span> and a quote ≥ 8 characters</td>
+      <td>1 · Golden lease</td>
+      <td>Residential lease PDF with early-termination fee, auto-renewal, late fee, and security-deposit language</td>
+      <td>Scan status <span class="mono">done</span>; findings include <span class="mono">early_termination</span> and <span class="mono">auto_renewal</span>; every finding grounded, with a quote of at least 8 characters</td>
+      <td>Pass</td>
     </tr>
     <tr>
-      <td>2 — Gym / service contract</td>
-      <td>Membership agreement with automatic renewal, notice window, and early cancellation fee</td>
-      <td>At least one of <span class="mono">auto_renewal</span>, <span class="mono">notice_window</span>, or <span class="mono">early_termination</span> returned with citations</td>
+      <td>2 · Gym contract</td>
+      <td>Membership agreement with automatic renewal, a written-notice window, and a cancellation fee</td>
+      <td>At least one of <span class="mono">auto_renewal</span>, <span class="mono">notice_window</span>, or <span class="mono">early_termination</span>, each with a verified quote and page</td>
+      <td>Pass</td>
     </tr>
     <tr>
-      <td>3 — Hallucination trap</td>
-      <td>Service agreement that explicitly allows cancellation with <em>no</em> penalty; planted invented finding “early termination fee of $2000”</td>
-      <td>Invented $2000 finding is dropped by citation validation; pipeline must not surface fabricated dollar amounts</td>
+      <td>3 · Hallucination trap</td>
+      <td>Service agreement that allows cancellation with no penalty, plus a planted fake finding: "early termination fee of $2000"</td>
+      <td>The invented $2,000 finding is dropped by the validator; no finding or explanation mentions $2,000</td>
+      <td>Pass</td>
     </tr>
   </tbody>
 </table>
-<p class="small muted">Automated suite: <span class="mono">npm test</span> (6 passing assertions covering MCP parse, validator, and the three M2 cases).</p>
+<p class="small muted">Latest run (September 30, 2026, mock provider): 6 tests, 6 passing, 0 failing. The 3 graded cases above run alongside an MCP parse test and two validator unit tests (keeps grounded quotes; drops a hallucinated fee).</p>
 
-<h3>1.5 Known limitations (honest M2 scope)</h3>
+<h3>2.5 Not implemented yet, and known limitations</h3>
+<p><strong>Intentionally not implemented in M2:</strong> legal advice, enforceability opinions, and negotiation or redline suggestions (out of scope by design); multi-agent Extractor-to-Ranker handoff and pgvector retrieval (planned for M3); Supabase Auth UI (the schema and row-level security are written but the demo uses a fixed owner id); and a background worker for very large PDFs.</p>
+<p><strong>Known limitations:</strong></p>
 <ol>
-  <li><strong>Sync path:</strong> demo-sized PDFs process inline; very large files may need an async worker (planned).</li>
-  <li><strong>Mock provider:</strong> offline/CI uses keyword heuristics; live demos should set <span class="mono">MODEL_PROVIDER=nrp</span>.</li>
-  <li><strong>No legal advice:</strong> quotes and plain-English risk labels only—not enforceability or negotiation counsel.</li>
-  <li><strong>Auth UI deferred:</strong> M2 uses a demo owner id locally; Supabase RLS migrations are ready for M3.</li>
+  <li><strong>Synchronous processing.</strong> PDFs are processed inside the upload request. Long documents can hit serverless time limits on Vercel. The job-status polling API already exists so a worker can be added without changing the UI.</li>
+  <li><strong>The mock extractor is shallow.</strong> Offline and in CI, extraction is keyword-based, so it can miss risks worded unusually (for example, "the lessee shall remit the balance of the term"). Real quality depends on the live NRP model, which we have not yet measured against the labeled dataset.</li>
+  <li><strong>Scanned PDFs fail.</strong> Image-only PDFs have no text layer. The scan fails with a clear error instead of guessing, but there is no OCR yet.</li>
+  <li><strong>Exact-match validation is strict.</strong> If the model paraphrases even slightly, a real risk is dropped. This trades recall for trust on purpose; M3 will measure how much recall it costs.</li>
 </ol>
 
-<!-- ===================== PART 2 ===================== -->
-<div class="page-break"></div>
-<h2>Part 2 — Market Research</h2>
+<h3>2.6 Setup and team ownership</h3>
+<p>A teammate who did not write the code can run the prototype with no cloud accounts:</p>
+<ol class="small">
+  <li><span class="mono">git clone https://github.com/krocks9903/TeamProject7_M2.git</span> then <span class="mono">cd TeamProject7_M2</span></li>
+  <li>Copy <span class="mono">.env.example</span> to <span class="mono">.env</span> (defaults to <span class="mono">MODEL_PROVIDER=mock</span>, no keys needed).</li>
+  <li><span class="mono">npm install</span>, then <span class="mono">npm test</span>, then <span class="mono">npm run dev</span>; open <span class="mono">http://localhost:3000</span> and upload a PDF.</li>
+  <li>For live model runs, set <span class="mono">MODEL_PROVIDER=nrp</span>, <span class="mono">NRP_BASE_URL</span>, and <span class="mono">NRP_API_KEY</span> (shared privately, never committed).</li>
+  <li>To run the MCP tool on its own: <span class="mono">npm run mcp:document</span>.</li>
+</ol>
+<table>
+  <thead><tr><th style="width:22%">Lane</th><th style="width:30%">Path</th><th style="width:18%">Owner</th><th>M2 focus</th></tr></thead>
+  <tbody>
+    <tr><td>Contracts + MCP parse</td><td class="mono">packages/shared, packages/mcp-document</td><td>Nolan</td><td>Stable types; page-mapped PDF extraction</td></tr>
+    <tr><td>Agent + orchestrator</td><td class="mono">packages/agent</td><td>Krish</td><td>NRP wiring; persona tuning; validator</td></tr>
+    <tr><td>Web + data</td><td class="mono">apps/web, supabase/</td><td>Diego</td><td>Upload UX; Vercel deploy; migrations</td></tr>
+    <tr><td>Tests + docs</td><td class="mono">tests/, docs/</td><td>Nolan</td><td>Graded cases; architecture docs</td></tr>
+    <tr><td>Market research + BMC</td><td>This report (Part 2)</td><td>Diego + Krish</td><td>Competitors, TAM/SAM, canvas</td></tr>
+  </tbody>
+</table>
 
-<h3>2.1 Competitive landscape</h3>
+<!-- ============================ PART 2 ============================ -->
+<div class="page-break"></div>
+<h2>3. Part 2: Market Research</h2>
+
+<h3>3.1 Competitive landscape</h3>
 <p>
-  We compared FinePrint against seven primary substitutes and one adjacent product. Sources were accessed
-  <strong>September 22, 2026</strong>. Pricing is “as listed” on vendor sites that day and may change.
+  We looked for anything a student would realistically use today to answer "what in this document can cost me money?"
+  That includes direct AI competitors, indirect human and legal services, and the status quo of not reading at all.
+  Every claim below comes from the vendor's own page or a published source, checked on September 30, 2026.
+  Prices change; they are shown as listed that day.
 </p>
 
 <table>
   <thead>
     <tr>
-      <th>Competitor</th>
-      <th>What it does</th>
-      <th>Who uses it</th>
-      <th>Key limitation</th>
-      <th>Gap FinePrint could fill</th>
+      <th style="width:14%">Competitor / Solution</th>
+      <th style="width:21%">What it does</th>
+      <th style="width:14%">Who uses it</th>
+      <th style="width:21%">Key limitation</th>
+      <th style="width:23%">Gap FinePrint could fill</th>
+      <th style="width:7%">Src.</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>ChatGPT (consumer)</td>
-      <td>General LLM summarize/review of pasted or uploaded contracts</td>
-      <td>Students and anyone with an account; common “current hire”</td>
-      <td>Hallucinations / weak grounding; no enforced citation schema; consumer data may train models depending on settings</td>
-      <td>Ranked money-loss list with verbatim quotes + page; fail-closed validator</td>
+      <td><strong>LeaseScan AI</strong><span class="tag">Direct</span></td>
+      <td>Upload a residential lease; get red flags, hidden costs, market-rate comparison, negotiation scripts, key dates. Pro plan $12/month.</td>
+      <td>Renters reviewing an apartment, house, or condo lease</td>
+      <td>Lease-only. Goes beyond the document into market comps and negotiation scripts, which are harder to verify.</td>
+      <td>Same pre-sign check for gym, phone, loan, and internship documents, with every finding tied to a quote and page.</td>
+      <td>[1]</td>
     </tr>
     <tr>
-      <td>LeaseScan AI</td>
-      <td>Residential lease PDF → red flags, costs, comps, negotiation scripts; Pro ~$12/mo</td>
-      <td>Renters</td>
-      <td>Lease-only; leans on scripts/comps beyond grounded quote lists</td>
-      <td>Same grounding UX across leases <em>and</em> gym/loan/service docs</td>
+      <td><strong>LeaseLenses</strong><span class="tag">Direct</span></td>
+      <td>AI lease review of rent, deposit, fees, renewal, notice, and termination clauses; state compliance checks for all 50 states; free calculators.</td>
+      <td>Residential renters before signing or renewing</td>
+      <td>Lease-centric freemium product. Framed around state-law compliance rather than "what can this cost me."</td>
+      <td>A money-loss list across document types, free at the student tier while inference runs on NRP.</td>
+      <td>[2]</td>
     </tr>
     <tr>
-      <td>LeaseLenses</td>
-      <td>AI lease review, state checks, money/rights at stake</td>
-      <td>Renters / tenants</td>
-      <td>Lease-centric compliance framing</td>
-      <td>Cross-document money-loss scanner; student-simple upload→list</td>
+      <td><strong>Vikk AI</strong><span class="tag">Direct</span></td>
+      <td>Clause-by-clause contract and lease review: risk flags, missing protections, state-law cross-checks, and drafted redlines and emails to the other party. First review free.</td>
+      <td>Renters, new hires, freelancers, small-business owners</td>
+      <td>Positions itself as a legal assistant (enforceability, redlines). That raises the cost of any mistake and the unauthorized-practice-of-law surface.</td>
+      <td>A deliberately narrower promise: extract and quote money-loss clauses only, with no legal opinions to get wrong.</td>
+      <td>[3]</td>
     </tr>
     <tr>
-      <td>Vikk AI</td>
-      <td>Broad contract/lease review; state-law cross-check; draft redlines; first review free</td>
-      <td>Renters, new hires, freelancers, SMBs</td>
-      <td>“Attorney-grade” legal-assistant positioning (enforceability + negotiation)</td>
-      <td>Narrower honest scope: extract &amp; cite only; no legal advice claims</td>
-    </tr>
-    <tr>
-      <td>LeaseAI</td>
-      <td>Free lease analyzer; free ≤3 docs/mo; premium ~$3.99/mo</td>
+      <td><strong>LeaseAI</strong><span class="tag">Direct</span></td>
+      <td>Free AI lease analyzer that spots hidden fees and risky clauses. Free plan: 3 documents/month. Premium: $3.99/month unlimited.</td>
       <td>Cost-sensitive renters</td>
-      <td>Lease chatbot pattern; capped free tier</td>
-      <td>Broader doc types + grounding validator as differentiator</td>
+      <td>Leases only; free tier is capped; no stated guarantee that flagged text actually appears in the lease.</td>
+      <td>Broader document types plus a fail-closed citation check as the visible trust feature.</td>
+      <td>[4]</td>
     </tr>
     <tr>
-      <td>LegalZoom Personal Attorney Plan</td>
-      <td>Prepaid attorney access; document review up to 10 pages included; ~$16.59–$19.84/mo published examples; longer docs $69 / $149 add-ons</td>
-      <td>Consumers wanting licensed guidance</td>
-      <td>Cost/friction for “sign tonight”; not instant</td>
-      <td>Near-zero-cost pre-screen that cites the PDF before paying a lawyer</td>
+      <td><strong>LegalZoom Personal Attorney Plan</strong><span class="tag">Indirect</span></td>
+      <td>Prepaid access to network attorneys, including attorney review of contracts up to 10 pages. $199/year or $119 every 6 months. 11–15 pages costs $69; 16–25 pages costs $149.</td>
+      <td>Consumers who want a licensed attorney's opinion</td>
+      <td>Not instant; long leases trigger add-on fees; a subscription is overkill for a one-night "should I sign this?" decision.</td>
+      <td>A free first pass that shows which quoted clauses are worth paying an attorney to look at.</td>
+      <td>[5]</td>
     </tr>
     <tr>
-      <td>Human tenant / lease attorney</td>
-      <td>Licensed review (and possibly negotiation)</td>
-      <td>Tenants who can afford and wait</td>
-      <td>Marketplace averages ~$300–$650; illustrative band ~$150–$500; too expensive for many students</td>
-      <td>Cheap first pass so users escalate only high-severity issues</td>
+      <td><strong>Tenant / lease attorney</strong><span class="tag">Indirect</span></td>
+      <td>A licensed lawyer reviews the lease for the tenant and may negotiate.</td>
+      <td>Tenants who can afford to pay and wait</td>
+      <td>Average flat fee of $300 for a residential lease review on one marketplace; vendors cite $300–$500. Too costly for most students.</td>
+      <td>Screens the document first so users escalate only high-severity, quoted issues.</td>
+      <td>[6] [1]</td>
     </tr>
     <tr>
-      <td>ToS;DR (adjacent)</td>
-      <td>A–E grades for website Terms / Privacy Policies</td>
-      <td>Privacy-conscious web users</td>
-      <td>Does not review a user’s private uploaded PDF</td>
-      <td>Private-document upload + money-loss ranking with page quotes</td>
+      <td><strong>Signing without reading</strong><span class="tag">Status quo</span></td>
+      <td>Skim the first page, trust the landlord or salesperson, sign. Fees surface later, on a bill or at move-out.</td>
+      <td>Nearly everyone: 91% of U.S. consumers accept terms without reading, rising to 97% of ages 18–34</td>
+      <td>Free and fast, but the cost arrives after it can be avoided. This is our strongest competitor.</td>
+      <td>Stay almost as easy as not reading: one upload, a short ranked list, before signing.</td>
+      <td>[7]</td>
     </tr>
   </tbody>
 </table>
-<p class="small muted">Full URLs for each row appear in the Appendix (sources [1]–[15]).</p>
 
-<p>
-  <strong>Positioning.</strong> Closest substitutes are new AI lease apps; the default free substitute is ChatGPT.
-  FinePrint’s wedge is a <em>document-agnostic money-loss scanner with mandatory quote grounding and no legal advice</em>—
-  thinner and more honest than “AI lawyer,” more structured than ChatGPT paste.
-</p>
+<div class="sources">
+  <p class="label">Sources for Table 3.1 (accessed September 30, 2026)</p>
+  <ol>
+    <li>LeaseScan AI, product and pricing page ("$12/month"; "A single attorney lease review costs $300–$500"). https://www.leasescanai.com/</li>
+    <li>LeaseLenses, AI lease review for renters (rent, deposit, fees, renewal, notices, termination; 50-state compliance checks). https://www.leaselenses.com/</li>
+    <li>Vikk AI, "AI Contract &amp; Lease Review" ("Your first review is free"; state-law cross-checks; proposed redlines). https://www.vikk.ai/solutions/review-a-contract-or-lease/</li>
+    <li>LeaseAI, "Free AI Lease Analyzer," site FAQ ("free plan … up to 3 documents per month"; "premium plan costs $3.99/month"). https://leaseai.net/</li>
+    <li>LegalZoom, Personal Attorney Plan pricing and document-review page limits. https://www.legalzoom.com/attorneys/legal-plans/personal/</li>
+    <li>ContractsCounsel, "Residential Lease Agreement Cost" ("average flat fee to review a residential real estate lease is $300"). https://www.contractscounsel.com/b/residential-lease-agreement-cost</li>
+    <li>C. Cakebread, "You're not alone, no one reads terms of service agreements," <em>Business Insider</em>, Nov. 15, 2017, reporting a Deloitte survey of 2,000 U.S. consumers. https://www.businessinsider.in/youre-not-alone-no-one-reads-terms-of-service-agreements/articleshow/61659553.cms</li>
+  </ol>
+</div>
+
+<p><strong>What the landscape tells us.</strong> Four AI products already sell "upload your lease, see the risks." That proves demand, and it means FinePrint cannot win by being first. Three patterns stand out:</p>
+<ul>
+  <li><strong>Most are lease-only.</strong> LeaseScan, LeaseLenses, and LeaseAI cover leases only. Vikk handles other contracts, but as a full legal assistant. No one offers a simple money-loss check for gym memberships, phone plans, or loan paperwork.</li>
+  <li><strong>The direct competitors are drifting toward legal advice.</strong> State-law checks, redlines, and negotiation emails add value, but they also add liability and more ways to be wrong. FinePrint's smaller promise ("here is the sentence, here is the page") is easier to trust and to defend.</li>
+  <li><strong>The real competitor is not reading at all.</strong> Anything slower or harder than signing loses. That sets our bar: one upload, one short list, no account.</li>
+</ul>
 
 <div class="page-break"></div>
-<h3>2.2 Market size + opportunity</h3>
+<h3>3.2 Market size and opportunity</h3>
 <p>
-  <strong>Total Addressable Market (TAM).</strong> FinePrint sits at the intersection of (a) people who sign consequential
-  consumer/housing documents without counsel and (b) software that helps review those documents with AI.
-  On the demand side, U.S. renter households alone were about <strong>46.2 million</strong> in Q3 2025
-  (34.7% of occupied units), per Census Housing Vacancies and Homeownership summaries reported in industry coverage;
-  Arbor’s 2025 update similarly places rental households near a record <strong>46.1 million</strong>.
-  That housing base is only the lease wedge—students and early-career adults also sign gym, phone, insurance, loan,
-  and internship agreements. On the software side, analyst estimates for AI / contract-review platforms vary by definition,
-  but converge on a multi-billion-dollar category growing quickly: e.g., AI contract review valued around
-  <strong>USD 2.8B in 2025</strong> with a projected <strong>USD 3.4B in 2026</strong> (NextMSC),
-  while MarketsandMarkets estimates legal AI software near <strong>USD 3.11B in 2025</strong> with ~28% CAGR through 2030.
-  We treat TAM as the broad consumer-plus-SMB “understand what I’m signing before money is lost” opportunity spanning
-  those renter/signer populations and the AI contract-review spend envelope—not the entire USD ~1.9T U.S. rental housing
-  industry (Market Data Forecast), which overstates what software can capture.
+  <strong>Total Addressable Market (TAM).</strong> FinePrint addresses people who sign money-bearing consumer documents without a
+  lawyer. The largest, best-measured group is renters: the Census Bureau counted 46.16 million U.S. renter households in Q3 2025,
+  34.7% of occupied housing [8], and Arbor reports a record 46.1 million for 2025 [9]. Bottom-up, if each renter household
+  runs one pre-sign scan a year at $5, the lease wedge alone is about <strong>$231 million a year</strong> (46.2M × $5).
+  Gym, wireless, and loan agreements would add to that; we have not yet sized them. Top-down, analysts value AI contract
+  review at USD 2.8 billion in 2025, projected at USD 3.4 billion in 2026 and USD 22.4 billion by 2035 (23.2% CAGR) [10], and legal AI
+  software at USD 3.11 billion in 2025 with a 28.3% CAGR through 2030 [11]. Most of that spend is enterprise legal teams, not
+  consumers, so we treat the analyst figures as the ceiling of the category and the Census-based figure as our consumer TAM.
+  The two methods differ by more than 10×. That gap is our main sizing uncertainty.
 </p>
 <p>
-  <strong>Serviceable Addressable Market (SAM).</strong> Within two years, an AI agent like FinePrint can realistically
-  reach English-speaking U.S. students and young adults who (1) can upload a PDF, (2) will not pay $150–$650 for a lawyer
-  for every document, and (3) already experiment with ChatGPT on contracts. Practically, that is a slice of the ~46M
-  renter households plus adjacent consumer-contract signers—starting with university-dense metros and online distribution
-  (Vercel URL, campus channels). We do not claim enterprise legal-department budget; SAM is consumer self-serve
-  pre-sign review, not AmLaw workflow replacement.
+  <strong>Serviceable Addressable Market (SAM).</strong> In the next two years we can realistically reach English-speaking U.S. students
+  and early-career renters through campus channels and a free web app, starting at FGCU and other university-dense metros.
+  We have not found a sourced count of student renter households, so we use an explicit assumption: about 5% of renter
+  households (≈2.3 million) fit this profile and are reachable. At one $5 scan a year, SAM is about <strong>$11.5 million a year</strong>.
+  This figure is an assumption to test, not a finding. M4 user testing will check both the price and the once-a-year frequency.
 </p>
 <p>
-  <strong>Why now.</strong> Three shifts in the last 2–3 years make this acute and solvable: (1) LLMs with usable long-context
-  and tool calling make clause extraction cheap enough for free/near-free student use via NRP; (2) housing affordability
-  keeps renter formation elevated relative to ownership, so more people face long leases under time pressure;
-  (3) public awareness of AI hallucination risks creates demand for products that <em>cite the source document</em>
-  rather than free-floating summaries—exactly FinePrint’s guardrail.
+  <strong>Why now.</strong> Four things changed in the last two to three years. First, open models with long context windows and
+  structured JSON output can now extract clauses reliably enough to be useful. Through NRP, our inference cost for student use is
+  close to zero. Second, the open Model Context Protocol (late 2024) standardized how agents call tools, so a document parser
+  can be built once and reused by any agent. Third, renting keeps growing: renters made up 79.3% of U.S. household growth in
+  2025 [9], so more young adults face long leases under time pressure. Fourth, public awareness of AI "making things up" has
+  grown, which creates demand for tools that prove every claim with a quote. That is the exact feature FinePrint is built around.
 </p>
 <p>
-  <strong>Biggest market risk (not technology).</strong> Trust collapse from a single invented fee, or substitution by
-  “good enough” free ChatGPT, could prevent conversion even if extraction quality is decent. Related risk: users
-  (or regulators) perceive any money-loss scanner as unauthorized practice of law if messaging drifts into advice.
-  Our mitigation is product honesty—quotes only, no enforceability claims—and fail-closed citation validation.
+  <strong>Biggest market risk.</strong> Willingness to pay. Our users' current solution, not reading, is free, and competitors
+  already offer free tiers (LeaseAI's free plan, Vikk's free first review). Even if FinePrint works well, students may
+  use it once and never pay. We are reducing this risk by keeping the core scan free on NRP inference, testing paid
+  options (a one-time deep scan; university or property-manager sponsorship) in M4, and measuring repeat use before we
+  commit to a price.
 </p>
 
-<h3>2.3 Business Model Canvas — first draft</h3>
-<p class="small muted">Filled from M1 problem discovery and the competitive research above. Uncertainties are stated explicitly.</p>
+<table>
+  <thead><tr><th style="width:38%">Figure</th><th style="width:22%">Value</th><th>How it is used</th></tr></thead>
+  <tbody>
+    <tr><td>U.S. renter households, Q3 2025</td><td>46.16M (34.7% of occupied)</td><td>Bottom-up TAM base [8]</td></tr>
+    <tr><td>U.S. rental households, 2025 (record)</td><td>46.1M; renters 79.3% of household growth</td><td>Cross-check of [8]; "why now" [9]</td></tr>
+    <tr><td>AI contract review market</td><td>$2.8B (2025) → $3.4B (2026) → $22.4B (2035)</td><td>Top-down ceiling [10]</td></tr>
+    <tr><td>Legal AI software market</td><td>$3.11B (2025), 28.3% CAGR to 2030</td><td>Top-down cross-check [11]</td></tr>
+    <tr><td>Consumer TAM (lease wedge)</td><td>≈ $231M/yr</td><td>46.2M × 1 scan × $5 (team estimate)</td></tr>
+    <tr><td>SAM (2-year reach)</td><td>≈ $11.5M/yr</td><td>5% of renter households × $5 (assumption)</td></tr>
+  </tbody>
+</table>
+<div class="sources">
+  <p class="label">Sources for Section 3.2 (accessed September 30, 2026)</p>
+  <ol start="8">
+    <li>Yield PRO, "Number of Renter Households Falls in Q3" (Dec. 2025), summarizing U.S. Census Bureau, <em>Quarterly Residential Vacancies and Homeownership, Third Quarter 2025</em>. https://yieldpro.com/2025/12/number-of-renter-households-falls-in-q3/ · Census HVS: https://www.census.gov/housing/hvs/</li>
+    <li>Arbor Realty Trust, "Renters Now Represent 80% of U.S. Household Growth" (Apr. 14, 2026). https://arbor.com/blog/renters-now-represent-80-of-u-s-household-growth/</li>
+    <li>Next Move Strategy Consulting, "AI Contract Review Market." https://www.nextmsc.com/report/ai-contract-review-market-4984</li>
+    <li>MarketsandMarkets, "Legal AI Software Market." https://www.marketsandmarkets.com/Market-Reports/legal-ai-software-market-88725278.html</li>
+  </ol>
+</div>
 
+<div class="page-break"></div>
+<h3>3.3 Business Model Canvas (first draft)</h3>
+<p class="small muted">Built from our M1 interviews and the competitive research above. Uncertainties are marked <strong>Uncertain</strong> rather than left blank.</p>
 <table class="bmc">
-  <thead>
-    <tr><th>Block</th><th>Team DNK content</th></tr>
-  </thead>
+  <thead><tr><th>Block</th><th>Team DNK content</th></tr></thead>
   <tbody>
     <tr>
       <td>Customer Segments</td>
       <td>
-        (1) <strong>Primary (build first):</strong> FGCU / college students and young adults signing leases and consumer contracts without a lawyer.<br/>
-        (2) Early-career freelancers reviewing internship/client agreements.<br/>
-        (3) Parents/roommates helping a first-time signer (secondary influencers).<br/>
-        Uncertain: whether small-business owners become a later segment or dilute student focus.
+        <strong>1. Build first:</strong> college students and young adults signing their first leases and consumer contracts without a lawyer, starting at FGCU.<br/>
+        <strong>2.</strong> Early-career freelancers and interns reviewing client or internship agreements.<br/>
+        <strong>3.</strong> Parents and roommates who help a first-time signer (influencers and possible payers).<br/>
+        <em>Uncertain:</em> whether small landlords or property managers become a paying B2B segment, and whether that would pull us away from students.
       </td>
     </tr>
     <tr>
       <td>Value Propositions</td>
       <td>
-        Before signing, get a short ranked list of <em>ways this document can take your money</em>, each with a verbatim quote and page.
-        Faster and cheaper than an attorney; more grounded than ChatGPT paste; clearer scope than “AI lawyer” lease apps.
+        Before you sign, see the ways this document can cost you money, with the exact sentence and page for each.<br/>
+        <strong>For students:</strong> one upload, no account, free.
+        <strong>Compared with lease AI apps:</strong> works on any contract type, and every claim is verified against the document.
+        <strong>Compared with attorneys:</strong> a free pre-screen that shows when paying $300 for review is worth it.
       </td>
     </tr>
     <tr>
       <td>Channels</td>
       <td>
-        Web app URL (Vercel); campus GroupMe / clubs; SEO around “lease fee traps”; possibly housing office partnerships later.
-        Uncertain: paid acquisition viability on student budgets.
+        Free web app (Vercel URL); FGCU student organizations, residence-life and off-campus housing sessions, class GroupMe chats;
+        short "fee trap" posts timed to lease-signing season; later, campus housing office partnerships.
+        <em>Uncertain:</em> whether paid acquisition can ever pay back on student budgets.
       </td>
     </tr>
     <tr>
       <td>Customer Relationships</td>
       <td>
-        Self-service upload → results. Minimal setup. Return use at renewal / next contract.
-        Trust maintained by citations and transparent “not legal advice” framing. Human support is email-level for M2/M3.
+        Self-service: upload, then read the results, with no account needed for a first scan. Trust comes from visible quotes and a clear
+        "not legal advice" line. Users return at the next lease, renewal, or new contract. Idea to test: a reminder before a scanned document's renewal date. Email support during M3–M4.
       </td>
     </tr>
     <tr>
       <td>Revenue Streams</td>
       <td>
-        Near-term: free for campus demo (NRP inference cost ≈ $0). Later candidates: freemium (N scans/month),
-        one-time paid deep scan, or B2B2C via universities/property managers.
-        Uncertain which monetizes without killing trust; will revisit after M4 user testing.
+        Now: free (NRP inference costs ≈ $0 during the course). Candidates to test in M4: freemium (a few free scans, then about $3–5 per deep scan,
+        priced under LeaseAI's $3.99/month and LeaseScan's $12/month); B2B2C sponsorship by universities or property managers;
+        referral fee to partner tenant attorneys for high-severity cases.
+        <em>Uncertain:</em> which model students will actually pay for (see Biggest market risk).
       </td>
     </tr>
     <tr>
       <td>Key Resources</td>
       <td>
-        NRP model access; citation validator; sample corpus; monorepo agent + MCP; team domain knowledge from M1 interviews.
+        NRP model access (primary) and the Anthropic API (fallback); the <span class="mono">document_parse</span> MCP tool and citation validator;
+        our 39-PDF evaluation corpus with labeled clauses; M1 interview insights; the team's combined engineering and business skills.
       </td>
     </tr>
     <tr>
       <td>Key Activities</td>
       <td>
-        Improve extraction prompts; expand fixtures/evals; keep grounding fail-closed; ship UI; run user tests (M4);
-        maintain competitor watch on lease-AI pricing.
+        Tune extraction prompts and measure precision and recall on the labeled corpus; keep validation fail-closed; add document types;
+        run user tests (M4); track competitor features and pricing each month; run campus outreach during lease season.
       </td>
     </tr>
     <tr>
       <td>Key Partners</td>
       <td>
-        NRP / Nautilus (inference); Vercel (hosting); Supabase (auth/storage when enabled); optionally campus housing orgs.
-        Anthropic as paid fallback only.
+        National Research Platform (inference); Anthropic (paid fallback); Vercel (hosting); Supabase (auth, storage, database when enabled);
+        FGCU housing and student organizations (distribution); possibly local tenant attorneys for referrals.
+        <em>Hardest to replace:</em> free NRP inference.
       </td>
     </tr>
     <tr>
       <td>Cost Structure</td>
       <td>
-        Mostly fixed/low: hosting, storage, engineering time. Variable: Anthropic tokens if NRP is down; future embedding/RAG costs (M3).
-        NRP keeps bulk experimentation near zero—critical for student sustainability.
+        <strong>Fixed or low:</strong> hosting and database on free tiers, domain, and team engineering time (the largest real cost).
+        <strong>Variable with usage:</strong> fallback model tokens when NRP is unavailable, file storage, and (from M3) embedding and retrieval costs.
+        The content-hash cache avoids paying twice for the same document. <em>Uncertain:</em> NRP availability after the course ends. M3 will model per-scan costs at 100, 1,000, and 10,000 users.
       </td>
     </tr>
   </tbody>
 </table>
+<p class="small muted">Framework: A. Osterwalder and Y. Pigneur, <em>Business Model Generation</em>, John Wiley &amp; Sons, 2010.</p>
 
-<p>
-  <strong>Cross-functional note.</strong> Repository history on <span class="mono">agent-architecture</span> is intended to show
-  shared ownership across CS and entrepreneurship work (code, tests, docs, and this market report). Teammate lanes are
-  documented in <span class="mono">docs/TEAM_OWNERSHIP.md</span>.
-</p>
-
-
-<div class="page-break"></div>
-<h2>Part 1 (continued) — How to run &amp; what teammates own</h2>
-
-<h3>1.6 Setup instructions (from repository README)</h3>
-<p>
-  A teammate who did not write the code can reproduce the M2 prototype without cloud credentials:
-</p>
-<ol>
-  <li>Clone https://github.com/krocks9903/FInePrint-Agent and check out <span class="mono">agent-architecture</span>.</li>
-  <li>Copy <span class="mono">.env.example</span> to <span class="mono">.env</span> (default <span class="mono">MODEL_PROVIDER=mock</span>).</li>
-  <li>Run <span class="mono">npm install</span>, then <span class="mono">npm test</span>, then <span class="mono">npm run dev</span>.</li>
-  <li>Open http://localhost:3000, upload a PDF, and inspect ranked grounded findings.</li>
-  <li>For live NRP demos, set <span class="mono">NRP_BASE_URL</span>, <span class="mono">NRP_API_KEY</span>, and <span class="mono">MODEL_PROVIDER=nrp</span> (values shared in the team GroupMe; never committed).</li>
-</ol>
-<p>
-  Optional cloud path: apply <span class="mono">supabase/migrations/20260921_m2_init.sql</span>, set Supabase keys, and switch
-  <span class="mono">STORAGE_BACKEND=supabase</span> when ready. M2 demos may remain on the local JSON store under
-  <span class="mono">./data</span> (gitignored).
-</p>
-
-<h3>1.7 Request lifecycle (canonical)</h3>
-<ol>
-  <li><strong>Upload</strong> — <span class="mono">POST /api/scans</span> accepts <span class="mono">application/pdf</span> only, enforces a size cap, stores bytes, creates a <span class="mono">scans</span> row (<span class="mono">queued</span>).</li>
-  <li><strong>Parse (MCP)</strong> — <span class="mono">document_parse</span> produces page-mapped text; pages are persisted for citation checks.</li>
-  <li><strong>Analyze</strong> — FinePrint agent extracts candidate <span class="mono">RiskFinding[]</span> via NRP/Anthropic/mock.</li>
-  <li><strong>Validate</strong> — deterministic substring check; ungrounded quotes excluded from the user list.</li>
-  <li><strong>Return</strong> — UI polls <span class="mono">GET /api/scans/:id</span>; response omits full page text (PII minimization).</li>
-</ol>
-<p>
-  Content-hash caching (SHA-256 + prompt version + model id) skips redundant LLM work when the same document is re-uploaded—
-  important for demos and for cost control if the Anthropic fallback is active.
-</p>
-
-<h3>1.8 Parallel ownership (so commit history stays cross-functional)</h3>
+<h3>3.4 Market risk register</h3>
 <table>
-  <thead>
-    <tr><th>Lane</th><th>Path</th><th>Primary owner</th><th>M2 focus</th></tr>
-  </thead>
+  <thead><tr><th style="width:24%">Risk</th><th style="width:14%">Category</th><th style="width:28%">Why it matters</th><th>Mitigation</th></tr></thead>
   <tbody>
-    <tr><td>Contracts</td><td><span class="mono">packages/shared</span></td><td>Nolan</td><td>Keep RiskFinding / statuses stable</td></tr>
-    <tr><td>MCP / parse</td><td><span class="mono">packages/mcp-document</span></td><td>Nolan</td><td>Page-mapped PDF extraction</td></tr>
-    <tr><td>Agent</td><td><span class="mono">packages/agent</span></td><td>Krish</td><td>NRP wiring + persona tuning</td></tr>
-    <tr><td>Web</td><td><span class="mono">apps/web</span></td><td>Diego</td><td>Upload UX + Vercel deploy</td></tr>
-    <tr><td>Supabase</td><td><span class="mono">supabase/</span></td><td>Diego</td><td>Migrations / RLS ready</td></tr>
-    <tr><td>Tests / docs / market PDF</td><td><span class="mono">tests/</span>, <span class="mono">docs/</span></td><td>Nolan (+ Diego/Krish on BMC narrative)</td><td>Graded artifacts</td></tr>
+    <tr><td>Students won't pay</td><td>Adoption</td><td>Not reading is free, and competitors have free tiers</td><td>Keep the core scan free; test sponsorship and one-time deep scans in M4</td></tr>
+    <tr><td>One invented fee destroys trust</td><td>Trust</td><td>A single false alarm, shared widely, ends word of mouth</td><td>Fail-closed citation validator; hallucination trap in every test run</td></tr>
+    <tr><td>Seen as legal advice</td><td>Regulatory</td><td>Could block campus partnerships and create liability</td><td>Quotes and plain-English labels only; no enforceability claims or redlines</td></tr>
+    <tr><td>Lease-AI incumbents expand to all contracts</td><td>Incumbent response</td><td>Our multi-document wedge disappears</td><td>Move fast on campus distribution; make citation proof the brand</td></tr>
+    <tr><td>Free inference ends</td><td>Model dependency</td><td>Per-scan cost jumps if NRP access changes</td><td>Provider switch via env var; content-hash cache; smaller-model fallback</td></tr>
   </tbody>
 </table>
 
-<div class="page-break"></div>
-<h2>Part 2 (continued) — Competitive detail &amp; implications</h2>
-
-<h3>2.4 What we learned from competitors (for product scope)</h3>
+<h2>4. Conclusion</h2>
 <p>
-  Direct lease-AI products (LeaseScan, LeaseLenses, LeaseAI, Vikk) prove that “upload a lease PDF and get risks”
-  is already a marketed category in 2026. That is useful validation and a warning: FinePrint will not win by
-  claiming to be the first lease chatbot. Differentiation has to be crisp.
-</p>
-<ul>
-  <li><strong>Against ChatGPT:</strong> structure + citation validator + money-loss ranking, not open-ended chat.</li>
-  <li><strong>Against lease-only apps:</strong> document-type breadth (gym, phone, loan, internship) aligned with M1 interviews.</li>
-  <li><strong>Against Vikk-style “attorney-grade” assistants:</strong> refuse enforceability and negotiation scripts in M2/M3 messaging to reduce UPL/trust risk.</li>
-  <li><strong>Against LegalZoom / attorneys:</strong> position as a <em>pre-screen</em>, not a replacement—surface quoted risks so users know when escalation is worth $300+.</li>
-</ul>
-<p>
-  Competitor pricing bands also inform freemium design: consumer lease AI is marketed from roughly free–$12/month,
-  while attorney review sits roughly $150–$650. FinePrint can live in the free-to-low-price band while inference runs on NRP,
-  then introduce paid tiers only after M4 evidence that users return.
-</p>
-
-<h3>2.5 SAM sketch (transparent assumptions)</h3>
-<p>
-  Illustrative—not a forecast we would pitch as audited financials. If even <strong>1%</strong> of ~46M U.S. renter households
-  used a consumer AI pre-sign tool once per year, that is ~460k annual scan events. At a hypothetical $5 paid deep-scan
-  (or equivalent freemium conversion), gross would be on the order of low millions—enough to matter for a student venture,
-  tiny versus enterprise legal AI. The point for M2 is directionality: the renter base is large; willingness to pay is
-  unproven and must be tested in M4; ChatGPT remains the free substitute that caps pricing power.
-</p>
-
-<h3>2.6 Market risk register (short)</h3>
-<table>
-  <thead>
-    <tr><th>Risk</th><th>Why it matters</th><th>Mitigation in our design</th></tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Hallucinated fee destroys trust</td>
-      <td>Users abandon after one bad scare</td>
-      <td>Fail-closed citation validation; eval trap case</td>
-    </tr>
-    <tr>
-      <td>ChatGPT “good enough”</td>
-      <td>No willingness to switch or pay</td>
-      <td>Structured money-loss UX + citations as default</td>
-    </tr>
-    <tr>
-      <td>Perceived as legal advice / UPL</td>
-      <td>Distribution and campus partnerships stall</td>
-      <td>Quotes only; explicit non-advice; no redlines in M2</td>
-    </tr>
-    <tr>
-      <td>Lease-AI incumbents copy features</td>
-      <td>Feature parity race</td>
-      <td>Grounding + multi-doc-type focus; campus channel</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>
-  <strong>Open questions carried from M1 into M2/M3:</strong> Is the bottleneck finding clauses, understanding them, or acting before the deadline?
-  How wrong can the agent be before trust dies? M4 user testing is designed to answer both with behavioral evidence, not surveys alone.
-</p>
-
-<div class="page-break"></div>
-<h2>Conclusion</h2>
-<p>
-  Milestone 2 delivers a <strong>real, running, single-tool agent</strong> with MCP <span class="mono">document_parse</span>,
-  an architecture diagram that matches the code (Live vs Planned), automated tests including a hallucination trap,
-  and a market package—competitive landscape with primary-source citations, TAM/SAM with Census and analyst sources,
-  and a complete nine-block BMC draft that states uncertainties instead of leaving blanks.
+  M2 delivers a real, running single-tool agent. An MCP parse tool feeds a persona-driven extractor, a fail-closed citation
+  validator guards the output, and three graded tests pass, including one that proves an invented fee never reaches the user.
+  The market work shows the problem is common (46 million renter households; 97% of 18–34-year-olds accept terms without reading them) and that
+  the direct competitors are mostly lease-only and moving toward legal advice. That leaves room for a broader, narrower-promise,
+  quote-first scanner.
 </p>
 <p>
-  The agent is not yet impressive on every document, and it is not a lawyer. It is honest about those limits.
-  That honesty is the product strategy: grounded money-loss visibility before signing, with a path to multi-agent
-  extraction and evaluation in M3/M4.
-</p>
-
-<p class="callout small">
-  <strong>Submission checklist for LMS:</strong> (1) this PDF; (2) GitHub link
-  https://github.com/krocks9903/FInePrint-Agent/tree/agent-architecture ;
-  (3) architecture diagram (Figure 1 herein, also in <span class="mono">docs/architecture.md</span>).
-</p>
-
-<!-- ===================== APPENDIX ===================== -->
-<div class="page-break"></div>
-<h2>Appendix — Sources</h2>
-<p class="small">Accessed September 22, 2026 unless noted.</p>
-<ol class="sources">
-  <li>Bryckel, “Can ChatGPT Abstract a Lease?” https://www.bryckel.ai/resources/can-chatgpt-abstract-a-lease</li>
-  <li>Jones / GetJones, ChatGPT lease insurance extraction experiment. https://getjones.com/blog/chatgpt-extracting-insurance-requirements-from-lease-agreements/</li>
-  <li>Lextract, “Why ChatGPT Is Not Enough for Commercial Lease Review.” https://lextract.io/resources/articles/chatgpt-not-enough-lease-review</li>
-  <li>OpenAI Help Center, consumer data usage FAQ. https://help.openai.com/en/articles/7039943-how-chatgpt-uses-data</li>
-  <li>LeaseScan AI product site (features / $12 Pro). https://www.leasescanai.com/</li>
-  <li>LeaseLenses product site. https://www.leaselenses.com/</li>
-  <li>Vikk AI contract &amp; lease review. https://www.vikk.ai/solutions/review-a-contract-or-lease/</li>
-  <li>LeaseAI product site / FAQ (free tier &amp; $3.99). https://leaseai.net/</li>
-  <li>LegalZoom Personal Attorney Plan (pricing &amp; page limits). https://www.legalzoom.com/attorneys/legal-plans/personal/</li>
-  <li>ContractsCounsel, lease agreement cost (avg review ~$650). https://www.contractscounsel.com/b/lease-agreement-cost</li>
-  <li>ContractsCounsel, residential lease review cost (~$300). https://www.contractscounsel.com/b/residential-lease-agreement-cost</li>
-  <li>AirCounsel / Loft Legal lease review from $250. https://loftlegal.com/service/review-of-your-lease-agreement</li>
-  <li>BizLeaseCheck, attorney vs AI lease review (~$150–$500 illustrative). https://bizleasecheck.com/resources/tenant-attorney-vs-ai-lease-review</li>
-  <li>ToS;DR. https://tosdr.org/en/</li>
-  <li>ToS;DR classification docs. https://docs.tosdr.org/phoenix/how-are-classifications-calculated</li>
-  <li>Yield PRO summary of Census HVS Q3 2025 renter households (~46.16M; 34.7% of occupied). https://yieldpro.com/2025/12/number-of-renter-households-falls-in-q3/</li>
-  <li>Arbor, “Renters Now Represent 80% of U.S. Household Growth” (~46.1M rental households in 2025). https://arbor.com/blog/renters-now-represent-80-of-u-s-household-growth/</li>
-  <li>U.S. Census Bureau, Housing Vacancies and Homeownership (HVS) releases. https://www.census.gov/housing/hvs/</li>
-  <li>NextMSC, AI Contract Review Market (~$2.8B 2025; ~$3.4B 2026). https://www.nextmsc.com/report/ai-contract-review-market-4984</li>
-  <li>MarketsandMarkets, Legal AI Software Market (~$3.11B 2025; ~28.3% CAGR to 2030). https://www.marketsandmarkets.com/Market-Reports/legal-ai-software-market-88725278.html</li>
-  <li>Market Data Forecast, U.S. rental housing market size context (~$1.85T 2025 / ~$1.91T 2026). https://www.marketdataforecast.com/market-reports/united-states-rental-housing-market</li>
-  <li>FinePrint Agent repository. https://github.com/krocks9903/FInePrint-Agent/tree/agent-architecture</li>
-</ol>
-
-<p class="small muted" style="margin-top:2em;">
-  End of Milestone 2 report — Team DNK · FinePrint Agent · CEN 4930 Fall 2026
+  What we do not know yet matters as much. We do not know whether students will pay, how much recall exact-match validation costs,
+  or how the live model performs on real leases. M3 will add the Extractor-to-Ranker handoff and measure quality on our labeled
+  corpus. M4 will put the agent in front of real signers.
 </p>
 
 </body>

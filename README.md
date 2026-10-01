@@ -6,7 +6,7 @@ An AI agent that reads an important document and tells you the specific ways it 
 CEN 4930 AI Agent Studio · Florida Gulf Coast University · Fall 2026  
 Instructor: Dr. Vinod Kumar Ahuja
 
-**Status:** Milestone 2 architecture + vertical slice on branch `milestone-2`.
+**Status:** Milestone 2 architecture + vertical slice on branch `main`.
 
 ---
 
@@ -50,9 +50,8 @@ docs/                     Architecture + contributing
 ## Setup (no cloud required)
 
 ```bash
-git clone https://github.com/krocks9903/FInePrint-Agent.git
-cd FInePrint-Agent
-git checkout milestone-2
+git clone https://github.com/krocks9903/TeamProject7_M2.git
+cd TeamProject7_M2
 cp .env.example .env
 npm install
 npm test
@@ -104,4 +103,4 @@ Apply `supabase/migrations/20260921_m2_init.sql`, set `STORAGE_BACKEND=supabase`
 
 ## Contributing
 
-Branch per topic off `milestone-2`. One other member reviews before merge. Commit history is graded — see [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+Branch per topic off `main`. One other member reviews before merge. Commit history is graded — see [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).

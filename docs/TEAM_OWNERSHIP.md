@@ -31,7 +31,7 @@ Suggested split for the next 48 hours:
 
 ## Branch / PR rules (graded commit history)
 
-1. Branch from `milestone-2` (or `main` after merge): `m2/<yourname>/<short-topic>`.
+1. Branch from `main`: `m2/<yourname>/<short-topic>`.
 2. One concern per PR. Keep PRs reviewable in <15 minutes.
 3. At least one other teammate reviews before merge.
 4. Commit your own work — do not paste teammates' code under your name.
@@ -40,9 +40,8 @@ Suggested split for the next 48 hours:
 ## How to run without cloud (teammate onboarding)
 
 ```bash
-git clone https://github.com/krocks9903/FInePrint-Agent.git
-cd FInePrint-Agent
-git checkout milestone-2
+git clone https://github.com/krocks9903/TeamProject7_M2.git
+cd TeamProject7_M2
 cp .env.example .env
 # MODEL_PROVIDER=mock is fine for UI + tests
 npm install
