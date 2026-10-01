@@ -22,7 +22,7 @@ process.env.MODEL_PROVIDER = "mock";
 
 describe("MCP document_parse", () => {
   it("extracts page-mapped text from a lease PDF", async () => {
-    const buf = buildSimplePdf(FIXTURE_LEASE_LINES);
+    const buf = await buildSimplePdf(FIXTURE_LEASE_LINES);
     const result = await parsePdfBuffer(buf);
     assert.ok(result.meta.pageCount >= 1);
     assert.ok(result.meta.charCount > 0);
@@ -80,7 +80,7 @@ describe("M2 test cases (inputs + expected outputs)", () => {
       ownerId: "test-owner",
       filename: "lease.pdf",
       mime: "application/pdf",
-      buffer: buildSimplePdf(FIXTURE_LEASE_LINES),
+      buffer: await buildSimplePdf(FIXTURE_LEASE_LINES),
     });
     assert.equal(res.status, "done");
     const detail = await orch.getScanDetail(res.scan_id);
@@ -101,7 +101,7 @@ describe("M2 test cases (inputs + expected outputs)", () => {
       ownerId: "test-owner",
       filename: "gym.pdf",
       mime: "application/pdf",
-      buffer: buildSimplePdf(FIXTURE_GYM_LINES),
+      buffer: await buildSimplePdf(FIXTURE_GYM_LINES),
     });
     assert.equal(res.status, "done");
     const detail = await orch.getScanDetail(res.scan_id);
@@ -144,7 +144,7 @@ describe("M2 test cases (inputs + expected outputs)", () => {
       ownerId: "test-owner",
       filename: "trap.pdf",
       mime: "application/pdf",
-      buffer: buildSimplePdf(FIXTURE_TRAP_LINES),
+      buffer: await buildSimplePdf(FIXTURE_TRAP_LINES),
     });
     const detail = await orch.getScanDetail(res.scan_id);
     assert.ok(detail);

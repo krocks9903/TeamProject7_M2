@@ -3,31 +3,17 @@
  * Owner lane: MCP / document pipeline (see docs/TEAM_OWNERSHIP.md).
  */
 
-import { createRequire } from "node:module";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { DocumentPage, ParseResult } from "@fineprint/shared";
-
-const require = createRequire(import.meta.url);
-// pdf-parse is CJS; default export is the parse function in Node.
-const pdfParse = require("pdf-parse") as (
-  data: Buffer,
-  options?: { pagerender?: (pageData: PdfPageData) => Promise<string> }
-) => Promise<{ text: string; numpages: number; info?: unknown }>;
-
-interface PdfPageData {
-  pageIndex: number;
-  getTextContent: () => Promise<{ items: Array<{ str?: string }> }>;
-}
-
-async function renderPage(pageData: PdfPageData): Promise<string> {
-  const content = await pageData.getTextContent();
-  const strings = content.items
-    .map((item) => (typeof item.str === "string" ? item.str : ""))
-    .filter(Boolean);
-  return strings.join(" ");
-}
 
 /**
  * Parse a PDF buffer into per-page text suitable for citation checks.
+ *
+ * Uses pdfjs-dist directly instead of the `pdf-parse` package: pdf-parse
+ * bundles a years-old, frozen pdf.js build that throws "bad XRef entry" /
+ * "Command token too long" on some perfectly valid, standards-compliant PDFs
+ * (verified against byte-accurate xref tables from multiple generators) —
+ * a real risk for user-uploaded leases, not just synthetic test fixtures.
  */
 export async function parsePdfBuffer(buffer: Buffer): Promise<ParseResult> {
   if (!buffer?.length) {
@@ -37,45 +23,37 @@ export async function parsePdfBuffer(buffer: Buffer): Promise<ParseResult> {
     };
   }
 
-  const pageTexts: string[] = [];
-  const data = await pdfParse(buffer, {
-    pagerender: async (pageData) => {
-      const text = await renderPage(pageData);
-      pageTexts[pageData.pageIndex] = text;
-      return text;
-    },
+  const loadingTask = getDocument({
+    data: new Uint8Array(buffer),
+    useSystemFonts: true,
   });
 
-  const pages: DocumentPage[] = [];
-  const count = Math.max(data.numpages || 0, pageTexts.length);
+  try {
+    const doc = await loadingTask.promise;
+    const pages: DocumentPage[] = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i);
+      const content = await page.getTextContent();
+      const text = content.items
+        .map((item) => ("str" in item ? item.str : ""))
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+      pages.push({ page: i, text });
+    }
 
-  for (let i = 0; i < count; i++) {
-    const text = (pageTexts[i] ?? "").replace(/\s+/g, " ").trim();
-    pages.push({ page: i + 1, text });
-  }
-
-  // Fallback: some PDFs only populate aggregate text via pdf-parse.
-  if (pages.every((p) => !p.text) && data.text?.trim()) {
-    const fallback = data.text.replace(/\s+/g, " ").trim();
+    const charCount = pages.reduce((n, p) => n + p.text.length, 0);
     return {
-      pages: [{ page: 1, text: fallback }],
+      pages,
       meta: {
-        pageCount: 1,
-        charCount: fallback.length,
-        empty: fallback.length === 0,
+        pageCount: pages.length,
+        charCount,
+        empty: charCount === 0,
       },
     };
+  } finally {
+    await loadingTask.destroy();
   }
-
-  const charCount = pages.reduce((n, p) => n + p.text.length, 0);
-  return {
-    pages,
-    meta: {
-      pageCount: pages.length,
-      charCount,
-      empty: charCount === 0,
-    },
-  };
 }
 
 export function pagesToAgentContext(pages: DocumentPage[], maxChars = 24_000): string {

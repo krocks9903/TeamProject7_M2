@@ -1,38 +1,26 @@
+import PDFKit from "pdfkit";
+
 /**
  * Builds tiny text PDFs for offline tests (no binary checked into git beyond generation).
+ * pdf-parse bundles an old pdf.js build that can't decode Flate-compressed content
+ * streams (pdf-lib compresses those unconditionally, no toggle) and also chokes on
+ * hand-rolled PDF bytes with manually-computed xref offsets. pdfkit with
+ * `compress: false` produces plain-text streams that the old parser can read.
  */
-export function buildSimplePdf(lines: string[]): Buffer {
-  const escaped = lines
-    .map((l) => l.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)"))
-    .join(") Tj T* (");
-  const stream = `BT /F1 11 Tf 50 740 Td 14 TL (${escaped}) Tj ET`;
-  const objects: string[] = [];
-  objects.push("1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n");
-  objects.push("2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n");
-  objects.push(
-    "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources<< /Font<< /F1 5 0 R >> >> >>endobj\n"
-  );
-  objects.push(
-    `4 0 obj<< /Length ${stream.length} >>stream\n${stream}\nendstream\nendobj\n`
-  );
-  objects.push(
-    "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n"
-  );
+export function buildSimplePdf(lines: string[]): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFKit({ compress: false, margin: 50 });
+    const chunks: Buffer[] = [];
+    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
 
-  let body = "%PDF-1.4\n";
-  const offsets: number[] = [0];
-  for (const obj of objects) {
-    offsets.push(Buffer.byteLength(body, "utf8"));
-    body += obj;
-  }
-  const xrefStart = Buffer.byteLength(body, "utf8");
-  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (let i = 1; i <= objects.length; i++) {
-    xref += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
-  }
-  body += xref;
-  body += `trailer<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
-  return Buffer.from(body, "utf8");
+    doc.font("Helvetica").fontSize(11);
+    for (const line of lines) {
+      doc.text(line);
+    }
+    doc.end();
+  });
 }
 
 export const FIXTURE_LEASE_LINES = [

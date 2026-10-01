@@ -5,7 +5,7 @@ const nextConfig = {
     "@fineprint/agent",
     "@fineprint/mcp-document",
   ],
-  serverExternalPackages: ["pdf-parse"],
+  serverExternalPackages: ["pdfjs-dist"],
 };
 
 export default nextConfig;
