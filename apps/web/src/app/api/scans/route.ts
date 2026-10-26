@@ -17,7 +17,10 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const mime = file.type || "application/pdf";
     const orchestrator = getOrchestrator();
-    const result = await orchestrator.createAndProcess({
+    // ?async=1 returns the scan id immediately so clients can follow /events live.
+    const isAsync = new URL(req.url).searchParams.get("async") === "1";
+    const run = isAsync ? orchestrator.startScan : orchestrator.createAndProcess;
+    const result = await run.call(orchestrator, {
       ownerId: DEMO_OWNER,
       filename: file.name || "document.pdf",
       mime,

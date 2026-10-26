@@ -14,6 +14,7 @@ import type {
   ScanStatus,
 } from "@fineprint/shared";
 import { PROMPT_VERSION } from "@fineprint/shared";
+import { GlobalFeed, JsonlEventSink } from "./events.js";
 
 export interface StorePaths {
   root: string;
@@ -38,8 +39,14 @@ export class LocalStore {
   private root: string;
   private dbPath: string;
   private filesDir: string;
+  /** Live scan events, stored beside the scan data (Supabase-ready via EventSink). */
+  readonly events: JsonlEventSink;
+  /** Sanitized events of all scans, for the private Mission Control screen. */
+  readonly feed: GlobalFeed;
 
   constructor(root = path.join(process.cwd(), "data")) {
+    this.events = new JsonlEventSink(path.join(root, "events"));
+    this.feed = new GlobalFeed(path.join(root, "events"));
     this.root = root;
     this.dbPath = path.join(root, "db.json");
     this.filesDir = path.join(root, "files");

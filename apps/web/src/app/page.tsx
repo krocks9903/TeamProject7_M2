@@ -1,113 +1,102 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import type { FindingRecord, ScanDetail } from "@fineprint/shared";
+import { MotionConfig, motion } from "motion/react";
+import { useState } from "react";
+import { AppShell } from "@/components/AppShell";
+import { Disclaimer } from "@/components/Disclaimer";
+import { ErrorNotice } from "@/components/ErrorNotice";
+import { Hero } from "@/components/Hero";
+import { MiniPreview } from "@/components/MiniPreview";
+import { ResultsApp } from "@/components/ResultsApp";
+import { ScanScreen } from "@/components/ScanScreen";
+import { TopBar } from "@/components/TopBar";
+import { UploadZone } from "@/components/UploadZone";
+import { useScan } from "@/hooks/useScan";
+import { makeError } from "@/lib/errors";
+
+const SAMPLE_URL = "/sample-lease.pdf";
+
+const fade = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  transition: { duration: 0.25 },
+};
 
 export default function HomePage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [findings, setFindings] = useState<FindingRecord[]>([]);
-  const [scanMeta, setScanMeta] = useState<string>("");
+  const scan = useScan();
+  const [sampleError, setSampleError] = useState(false);
 
-  const pollScan = useCallback(async (scanId: string) => {
-    for (let i = 0; i < 60; i++) {
-      const res = await fetch(`/api/scans/${scanId}`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `Poll failed (${res.status})`);
-      }
-      const detail = (await res.json()) as ScanDetail;
-      setStatus(detail.scan.status);
-      if (detail.scan.status === "done") {
-        setFindings(detail.findings);
-        setScanMeta(
-          `${detail.document.original_filename} · model ${detail.scan.model} · ${detail.findings.length} grounded finding(s)`
-        );
-        return;
-      }
-      if (detail.scan.status === "failed") {
-        throw new Error(detail.scan.error ?? "Scan failed");
-      }
-      await new Promise((r) => setTimeout(r, 400));
-    }
-    throw new Error("Timed out waiting for scan");
-  }, []);
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setFindings([]);
-    setScanMeta("");
-    if (!file) {
-      setError("Choose a PDF first.");
-      return;
-    }
-    setBusy(true);
-    setStatus("uploading");
+  async function loadSample() {
+    setSampleError(false);
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/scans", { method: "POST", body });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Upload failed");
-      setStatus(json.cache_hit ? "done (cache)" : json.status);
-      if (json.status === "done") {
-        await pollScan(json.scan_id);
-      } else {
-        await pollScan(json.scan_id);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
+      const res = await fetch(SAMPLE_URL);
+      if (!res.ok) throw new Error(String(res.status));
+      const blob = await res.blob();
+      scan.start(new File([blob], "sample-lease.pdf", { type: "application/pdf" }));
+    } catch {
+      setSampleError(true);
     }
   }
 
-  return (
-    <main>
-      <div className="brand">FinePrint Agent · Team DNK</div>
-      <h1>Ways this document can cost you money</h1>
-      <p className="lede">
-        Upload a lease or contract PDF. The agent returns a ranked list of
-        money-loss risks — each one quoting the exact clause. No legal advice.
-        Invented fees are dropped by citation validation.
-      </p>
+  let screen: React.ReactNode;
 
-      <form className="panel" onSubmit={onSubmit}>
-        <div className="upload-row">
-          <input
-            type="file"
-            accept="application/pdf,.pdf"
-            onChange={(ev) => setFile(ev.target.files?.[0] ?? null)}
-            disabled={busy}
+  if (scan.phase === "done" && scan.detail) {
+    screen = (
+      <motion.div key="results" {...fade}>
+        <ResultsApp
+          detail={scan.detail}
+          cacheHit={scan.cacheHit}
+          fileUrl={scan.fileUrl}
+          onReset={scan.reset}
+        />
+      </motion.div>
+    );
+  } else if (scan.phase === "running") {
+    screen = (
+      <motion.div key="running" {...fade}>
+        <AppShell theme="ice" backdrop="ice">
+          <TopBar
+            title="Scanning your document"
+            file={scan.fileName ? { name: scan.fileName, sub: "Scanning…" } : null}
+            ring={{ percent: Math.round(((Math.min(scan.step, 3) + 0.5) / 4) * 100), caption: "Scanning…", spinning: true }}
           />
-          <button type="submit" disabled={busy || !file}>
-            {busy ? "Scanning…" : "Scan document"}
-          </button>
-        </div>
-        {status ? <p className="status">status: {status}</p> : null}
-        {error ? <p className="error">{error}</p> : null}
-      </form>
+          <Disclaimer />
+          <main id="main" className="view" tabIndex={-1}>
+            <ScanScreen step={scan.step} fileName={scan.fileName} cacheHit={scan.cacheHit} />
+          </main>
+        </AppShell>
+      </motion.div>
+    );
+  } else {
+    screen = (
+      <motion.div key="landing" {...fade}>
+        <AppShell theme="dark" backdrop="dusk">
+          <TopBar title="Lease and contract scanner" />
+          <Disclaimer />
+          <main id="main" className="view view--landing" tabIndex={-1}>
+            <Hero />
+            {scan.error ? (
+              <ErrorNotice error={scan.error} onResume={scan.canResume ? scan.resume : undefined} />
+            ) : null}
+            {sampleError ? (
+              <ErrorNotice error={makeError("network", "We couldn't load the sample lease.")} />
+            ) : null}
+            <UploadZone onFile={scan.start} onSample={loadSample} />
+            <MiniPreview />
+          </main>
+        </AppShell>
+      </motion.div>
+    );
+  }
 
-      {scanMeta ? <p className="status">{scanMeta}</p> : null}
-
-      {findings.length > 0 ? (
-        <ul className="findings">
-          {findings.map((f) => (
-            <li key={f.id} className="finding">
-              <header>
-                <strong>{f.risk_type.replaceAll("_", " ")}</strong>
-                <span className={`pill ${f.severity}`}>{f.severity}</span>
-              </header>
-              <div>{f.plain_english}</div>
-              <blockquote className="quote">&ldquo;{f.quote}&rdquo;</blockquote>
-              <div className="meta">page {f.page} · grounded citation</div>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </main>
+  return (
+    // reducedMotion="user": transforms and layout animations are skipped for
+    // people who prefer reduced motion; opacity fades still run.
+    <MotionConfig reducedMotion="user">
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
+      {screen}
+    </MotionConfig>
   );
 }

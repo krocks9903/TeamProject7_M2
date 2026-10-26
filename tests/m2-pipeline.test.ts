@@ -9,7 +9,7 @@ import {
   resetStoreForTests,
   validateCitations,
 } from "@fineprint/agent";
-import { parsePdfBuffer } from "@fineprint/mcp-document";
+import { chunkPagesForAgent, parsePdfBuffer } from "@fineprint/mcp-document";
 import type { DocumentPage, RiskFinding } from "@fineprint/shared";
 import {
   buildSimplePdf,
@@ -67,6 +67,42 @@ describe("citation validator", () => {
     ];
     const out = validateCitations(findings, pages);
     assert.equal(out.length, 0);
+  });
+
+  const finding = (quote: string): RiskFinding => ({
+    risk_type: "late_fee",
+    severity: "medium",
+    plain_english: "Late fee applies.",
+    quote,
+    page: 1,
+  });
+
+  it("stores the document's own text, not the model's casing", () => {
+    const out = validateCitations([finding("LATE FEE OF $50")], pages);
+    assert.equal(out.length, 1);
+    assert.equal(out[0].quote, "late fee of $50");
+  });
+
+  it("drops quotes that start or end mid-word", () => {
+    assert.equal(validateCitations([finding("ate fee of $50 if")], pages).length, 0);
+    assert.equal(validateCitations([finding("Tenant pays a late fe")], pages).length, 0);
+  });
+
+  it("drops quotes longer than 300 characters", () => {
+    const long = "word ".repeat(80).trim();
+    const longPages: DocumentPage[] = [{ page: 1, text: long }];
+    assert.equal(validateCitations([finding(long)], longPages).length, 0);
+  });
+});
+
+describe("chunking", () => {
+  it("splits an oversized page instead of truncating it", () => {
+    const text = "alpha ".repeat(200).trim() + " TAILMARKER";
+    const chunks = chunkPagesForAgent([{ page: 3, text }], 400);
+    assert.ok(chunks.length > 1);
+    assert.ok(chunks.every((c) => c.length <= 400));
+    assert.ok(chunks.every((c) => c.includes("--- PAGE 3 ---")));
+    assert.ok(chunks.join("").includes("TAILMARKER"));
   });
 });
 

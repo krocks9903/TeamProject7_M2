@@ -3,7 +3,7 @@
  * Teammates: import from `@fineprint/shared` — do not duplicate these shapes in web/agent.
  */
 
-export const PROMPT_VERSION = "m2.v1" as const;
+export const PROMPT_VERSION = "m3.v2" as const;
 
 export const RISK_TYPES = [
   "early_termination",
@@ -102,6 +102,8 @@ export interface ScanDetail {
   document: DocumentRecord;
   findings: FindingRecord[];
   pages?: DocumentPage[];
+  /** Pages whose text could not be decoded (broken PDF fonts); never scanned. */
+  unreadable_pages?: number[];
 }
 
 export interface CreateScanResponse {
@@ -116,3 +118,57 @@ export const MCP_TOOL_DOCUMENT_PARSE = "document_parse" as const;
 
 export const MAX_UPLOAD_BYTES_DEFAULT = 5 * 1024 * 1024;
 export const ALLOWED_MIME = ["application/pdf"] as const;
+
+/** Pipeline stages that emit live events (one per character in Mission Control). */
+export const SCAN_AGENTS = ["intake", "parser", "extractor", "ranker", "validator"] as const;
+export type ScanAgentId = (typeof SCAN_AGENTS)[number];
+
+export type ScanEventType = "start" | "progress" | "finish" | "error";
+
+/** A quote the citation validator refused to keep. */
+export interface DroppedQuote {
+  quote: string;
+  page: number;
+  reason: string;
+}
+
+/** Optional structured payload; every field is only set when it is really known. */
+export interface ScanEventData {
+  filename?: string;
+  bytes?: number;
+  cacheHit?: boolean;
+  pageCount?: number;
+  unreadablePages?: number;
+  provider?: string;
+  model?: string;
+  latencyMs?: number;
+  tokens?: number;
+  chunk?: number;
+  chunks?: number;
+  proposed?: number;
+  ranked?: number;
+  kept?: number;
+  dropped?: number;
+  droppedQuotes?: DroppedQuote[];
+  droppedQuote?: DroppedQuote;
+  findings?: number;
+  [key: string]: unknown;
+}
+
+export interface ScanEvent {
+  scanId: string;
+  /** Epoch milliseconds. */
+  ts: number;
+  /** Per-scan sequence number starting at 1; used to resume streams. */
+  seq: number;
+  agent: ScanAgentId;
+  type: ScanEventType;
+  message: string;
+  data?: ScanEventData;
+}
+
+/** A sanitized ScanEvent from the global feed (no document text) with its feed cursor. */
+export interface FeedEvent extends ScanEvent {
+  /** 1-based position in the global feed; pass as `after` to resume. */
+  feedId: number;
+}

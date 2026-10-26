@@ -2,6 +2,8 @@
  * Scan orchestrator — state machine:
  * queued → parsing → analyzing → validating → done | failed
  *
+ * Every real step also emits a ScanEvent (see events.ts) for Mission Control.
+ *
  * Teammates: extend extraction in persona.ts; do not bypass citation validation.
  */
 
@@ -9,13 +11,16 @@ import {
   ALLOWED_MIME,
   MAX_UPLOAD_BYTES_DEFAULT,
   type CreateScanResponse,
+  type ScanAgentId,
   type ScanDetail,
+  type ScanEvent,
 } from "@fineprint/shared";
-import { parsePdfBuffer } from "@fineprint/mcp-document";
+import { parsePdfBuffer, unreadablePages } from "@fineprint/mcp-document";
+import { EventEmitter, TeeSink } from "./events.js";
 import { extractRisksWithModel } from "./persona.js";
 import { resolveProvider } from "./provider.js";
 import { getStore, sha256, type LocalStore } from "./store.js";
-import { rankFindings, validateCitations } from "./validator.js";
+import { rankFindings, validateCitationsDetailed } from "./validator.js";
 
 export interface UploadInput {
   ownerId: string;
@@ -24,10 +29,24 @@ export interface UploadInput {
   buffer: Buffer;
 }
 
+type Created = Awaited<ReturnType<Orchestrator["create"]>>;
+
 export class Orchestrator {
+  private emitters = new Map<string, EventEmitter>();
+  private activeAgent = new Map<string, ScanAgentId>();
+
   constructor(private store: LocalStore = getStore()) {}
 
-  async createAndProcess(input: UploadInput): Promise<CreateScanResponse> {
+  private emitterFor(scanId: string): EventEmitter {
+    let e = this.emitters.get(scanId);
+    if (!e) {
+      e = new EventEmitter(scanId, new TeeSink(this.store.events, this.store.feed));
+      this.emitters.set(scanId, e);
+    }
+    return e;
+  }
+
+  private checkUpload(input: UploadInput): void {
     const maxBytes = Number(
       process.env.MAX_UPLOAD_BYTES ?? MAX_UPLOAD_BYTES_DEFAULT
     );
@@ -40,42 +59,14 @@ export class Orchestrator {
     if (input.buffer.length > maxBytes) {
       throw new Error(`PDF exceeds max size of ${maxBytes} bytes`);
     }
+  }
 
+  /** Validates and stores the upload and creates the scan row; does not run the pipeline. */
+  private async create(input: UploadInput) {
+    this.checkUpload(input);
     const provider = resolveProvider();
     const hash = sha256(input.buffer);
-
     const cached = await this.store.findCachedScan(hash, provider.model);
-    if (cached) {
-      // Re-attach as a new scan row pointing at same findings copy for API simplicity:
-      // create a done scan that clones findings from cache.
-      const doc = await this.store.savePdf(
-        input.ownerId,
-        input.filename,
-        input.mime,
-        input.buffer
-      );
-      const scan = await this.store.createScan({
-        document_id: doc.id,
-        owner_id: input.ownerId,
-        content_sha256: hash,
-        model: provider.model,
-      });
-      await this.store.replaceFindings(
-        scan.id,
-        cached.findings.map(({ id: _id, scan_id: _s, ...rest }) => rest)
-      );
-      // Also reuse pages if we can parse quickly from cache path — parse once for this doc.
-      const pages = await parsePdfBuffer(input.buffer);
-      await this.store.setPages(doc.id, pages.pages);
-      await this.store.updateScanStatus(scan.id, "done");
-      return {
-        scan_id: scan.id,
-        document_id: doc.id,
-        status: "done",
-        cache_hit: true,
-      };
-    }
-
     const doc = await this.store.savePdf(
       input.ownerId,
       input.filename,
@@ -88,47 +79,164 @@ export class Orchestrator {
       content_sha256: hash,
       model: provider.model,
     });
+    await this.emitterFor(scan.id).emit("intake", "start", `Received ${input.filename}`, {
+      filename: input.filename,
+      bytes: input.buffer.length,
+    });
+    return { doc, scan, cached, input };
+  }
 
+  private async runCreated(c: Created): Promise<void> {
+    const { doc, scan, cached, input } = c;
+    const events = this.emitterFor(scan.id);
     try {
+      if (cached) {
+        // Reuse the cached findings on a new scan row, and parse once for this document's pages.
+        await this.store.replaceFindings(
+          scan.id,
+          cached.findings.map(({ id: _id, scan_id: _s, ...rest }) => rest)
+        );
+        const pages = await parsePdfBuffer(input.buffer);
+        await this.store.setPages(doc.id, pages.pages);
+        await this.store.updateScanStatus(scan.id, "done");
+        await events.emit(
+          "intake",
+          "finish",
+          `Seen this exact file before: reused ${cached.findings.length} saved findings`,
+          {
+            filename: input.filename,
+            bytes: input.buffer.length,
+            cacheHit: true,
+            pageCount: pages.meta.pageCount,
+            findings: cached.findings.length,
+            scanDone: true,
+          }
+        );
+        return;
+      }
+      await events.emit("intake", "finish", "File accepted: PDF, size OK", {
+        filename: input.filename,
+        bytes: input.buffer.length,
+        cacheHit: false,
+      });
       await this.processScan(scan.id);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       await this.store.updateScanStatus(scan.id, "failed", message);
+      await events.emit(this.activeAgent.get(scan.id) ?? "intake", "error", message, {
+        scanFailed: true,
+      });
       throw err;
+    } finally {
+      this.emitters.delete(scan.id);
+      this.activeAgent.delete(scan.id);
     }
+  }
 
-    const updated = await this.store.getScan(scan.id);
+  async createAndProcess(input: UploadInput): Promise<CreateScanResponse> {
+    const c = await this.create(input);
+    await this.runCreated(c);
+    const updated = await this.store.getScan(c.scan.id);
     return {
-      scan_id: scan.id,
-      document_id: doc.id,
+      scan_id: c.scan.id,
+      document_id: c.doc.id,
       status: updated?.status ?? "failed",
-      cache_hit: false,
+      cache_hit: Boolean(c.cached),
     };
+  }
+
+  /** Like createAndProcess, but returns once the scan exists; the pipeline runs in the background. */
+  async startScan(input: UploadInput): Promise<CreateScanResponse> {
+    const c = await this.create(input);
+    void this.runCreated(c).catch(() => {
+      // already recorded on the scan row and as an error event
+    });
+    return {
+      scan_id: c.scan.id,
+      document_id: c.doc.id,
+      status: "queued",
+      cache_hit: Boolean(c.cached),
+    };
+  }
+
+  async getScanStatus(scanId: string) {
+    return (await this.store.getScan(scanId))?.status ?? null;
+  }
+
+  async getEvents(scanId: string, afterSeq = 0): Promise<ScanEvent[]> {
+    return this.store.events.list(scanId, afterSeq);
   }
 
   async processScan(scanId: string): Promise<void> {
     const scan = await this.store.getScan(scanId);
     if (!scan) throw new Error(`scan not found: ${scanId}`);
+    const events = this.emitterFor(scanId);
+    const phase = (agent: ScanAgentId) => this.activeAgent.set(scanId, agent);
 
+    phase("parser");
     await this.store.updateScanStatus(scanId, "parsing");
+    await events.emit("parser", "start", "Opening the PDF (document_parse)");
     const buffer = await this.store.readPdf(scan.document_id);
     const parsed = await parsePdfBuffer(buffer);
     if (parsed.meta.empty) {
       throw new Error("PDF produced no extractable text (empty or encrypted)");
     }
     await this.store.setPages(scan.document_id, parsed.pages);
+    const unreadable = unreadablePages(parsed.pages).length;
+    await events.emit(
+      "parser",
+      "finish",
+      `Read ${parsed.meta.pageCount} page${parsed.meta.pageCount === 1 ? "" : "s"}` +
+        (unreadable ? `, ${unreadable} unreadable` : ""),
+      { pageCount: parsed.meta.pageCount, unreadablePages: unreadable }
+    );
 
+    phase("extractor");
     await this.store.updateScanStatus(scanId, "analyzing");
     const provider = resolveProvider();
-    const { output, model } = await extractRisksWithModel(
-      provider,
-      parsed.pages
+    await events.emit("extractor", "start", `Reading for risky clauses with ${provider.model}`, {
+      provider: provider.name,
+      model: provider.model,
+    });
+    const extractStart = Date.now();
+    const { output, model } = await extractRisksWithModel(provider, parsed.pages, events);
+    await events.emit(
+      "extractor",
+      "finish",
+      `Proposed ${output.findings.length} risk${output.findings.length === 1 ? "" : "s"}`,
+      {
+        provider: provider.name,
+        model,
+        latencyMs: Date.now() - extractStart,
+        proposed: output.findings.length,
+      }
     );
 
+    phase("validator");
     await this.store.updateScanStatus(scanId, "validating");
-    const grounded = rankFindings(
-      validateCitations(output.findings, parsed.pages)
+    await events.emit(
+      "validator",
+      "start",
+      `Checking ${output.findings.length} quotes against the document`
     );
+    const { kept, dropped } = validateCitationsDetailed(output.findings, parsed.pages);
+    for (const d of dropped) {
+      await events.emit("validator", "progress", `Not in document: "${d.quote}"`, {
+        droppedQuote: d,
+      });
+    }
+    await events.emit(
+      "validator",
+      "finish",
+      dropped.length
+        ? `Kept ${kept.length}, threw out ${dropped.length} I couldn't find in the document`
+        : `Kept all ${kept.length}: every quote found in the document`,
+      { kept: kept.length, dropped: dropped.length, droppedQuotes: dropped }
+    );
+
+    phase("ranker");
+    await events.emit("ranker", "start", `Ranking ${kept.length} risks by severity`);
+    const grounded = rankFindings(kept);
     await this.store.replaceFindings(
       scanId,
       grounded.map((f) => ({
@@ -140,6 +248,11 @@ export class Orchestrator {
     // Keep model label accurate on the scan row
     scan.model = model;
     await this.store.updateScanStatus(scanId, "done");
+    await events.emit("ranker", "finish", `Ranked ${grounded.length} risks, scan complete`, {
+      ranked: grounded.length,
+      findings: grounded.length,
+      scanDone: true,
+    });
 
     console.info(
       JSON.stringify({
