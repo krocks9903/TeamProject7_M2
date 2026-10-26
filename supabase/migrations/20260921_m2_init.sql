@@ -66,9 +66,7 @@ create table if not exists public.findings (
 
 create index if not exists findings_scan_idx on public.findings (scan_id);
 
--- M3 placeholder: clause chunks + embeddings
--- create extension if not exists vector;
--- create table public.chunks (... embedding vector(1536));
+-- M3 chunks + embeddings: see 20261026_m3_chunks.sql
 
 alter table public.profiles enable row level security;
 alter table public.documents enable row level security;

@@ -11,6 +11,7 @@
   "dependencies": {
     "@fineprint/agent": "*",
     "@fineprint/mcp-document": "*",
+    "@fineprint/mcp-mailbox": "*",
     "@fineprint/shared": "*",
     "next": "^15.2.3",
     "react": "^19.0.0",

@@ -1,8 +1,6 @@
 /**
- * Scan orchestrator — state machine:
- * queued → parsing → analyzing → validating → done | failed
- *
- * Teammates: extend extraction in persona.ts; do not bypass citation validation.
+ * Scan orchestrator — M3 multi-agent pipeline:
+ * queued → parsing → analyzing (Extractor ReAct+RAG) → validating/ranking (Ranker) → done | failed
  */
 
 import {
@@ -12,10 +10,11 @@ import {
   type ScanDetail,
 } from "@fineprint/shared";
 import { parsePdfBuffer } from "@fineprint/mcp-document";
-import { extractRisksWithModel } from "./persona.js";
+import { runExtractorAgent } from "./extractor.js";
+import { getKnowledgeStore } from "./knowledge.js";
 import { resolveProvider } from "./provider.js";
+import { runRankerAgent } from "./ranker.js";
 import { getStore, sha256, type LocalStore } from "./store.js";
-import { rankFindings, validateCitations } from "./validator.js";
 
 export interface UploadInput {
   ownerId: string;
@@ -46,8 +45,6 @@ export class Orchestrator {
 
     const cached = await this.store.findCachedScan(hash, provider.model);
     if (cached) {
-      // Re-attach as a new scan row pointing at same findings copy for API simplicity:
-      // create a done scan that clones findings from cache.
       const doc = await this.store.savePdf(
         input.ownerId,
         input.filename,
@@ -64,9 +61,10 @@ export class Orchestrator {
         scan.id,
         cached.findings.map(({ id: _id, scan_id: _s, ...rest }) => rest)
       );
-      // Also reuse pages if we can parse quickly from cache path — parse once for this doc.
       const pages = await parsePdfBuffer(input.buffer);
       await this.store.setPages(doc.id, pages.pages);
+      // New document id: re-chunk so document_search works for the cached copy too.
+      await getKnowledgeStore().replaceDocumentChunks(doc.id, pages.pages);
       await this.store.updateScanStatus(scan.id, "done");
       return {
         scan_id: scan.id,
@@ -120,34 +118,39 @@ export class Orchestrator {
 
     await this.store.updateScanStatus(scanId, "analyzing");
     const provider = resolveProvider();
-    const { output, model } = await extractRisksWithModel(
+
+    // Agent 1 — Extractor (ReAct retrieval + structured extract)
+    const handoff = await runExtractorAgent({
+      documentId: scan.document_id,
+      scanId,
+      pages: parsed.pages,
       provider,
-      parsed.pages
-    );
+    });
 
     await this.store.updateScanStatus(scanId, "validating");
-    const grounded = rankFindings(
-      validateCitations(output.findings, parsed.pages)
-    );
+    // Agent 2 — Ranker (rewrite/rank only; quotes frozen)
+    const { findings, handoff: rankedHandoff } = runRankerAgent(handoff);
+
     await this.store.replaceFindings(
       scanId,
-      grounded.map((f) => ({
+      findings.map((f) => ({
         ...f,
         grounded: true as const,
       }))
     );
 
-    // Keep model label accurate on the scan row
-    scan.model = model;
     await this.store.updateScanStatus(scanId, "done");
 
     console.info(
       JSON.stringify({
         event: "scan_done",
         scan_id: scanId,
-        model,
-        finding_count: grounded.length,
+        // scan.model stays the provider model: the content-hash cache keys on it.
+        model: `${rankedHandoff.extractor_model}+ranker`,
+        finding_count: findings.length,
         page_count: parsed.meta.pageCount,
+        reasoning_steps: rankedHandoff.reasoning_trace.length,
+        agents: ["extractor", "ranker"],
       })
     );
   }
