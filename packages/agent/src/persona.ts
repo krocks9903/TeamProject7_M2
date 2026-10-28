@@ -290,6 +290,19 @@ export function dedupeFindings(findings: RiskFinding[]): RiskFinding[] {
   return out;
 }
 
+/** Characters of page text per model call (a 12k part took ~3 min on NRP and always finished). */
+const PART_CHARS = 12_000;
+/** Output budget per call, reasoning included; a 12k part used ~2.9k at default effort. */
+const MAX_OUTPUT_TOKENS = 8000;
+/** Model calls in flight per scan. */
+const PARALLEL_PARTS = 4;
+
+/** Page numbers in a chunk, read from its "--- PAGE n ---" headers. */
+function chunkPageNumbers(chunk: string): number[] {
+  const nums = [...chunk.matchAll(/^--- PAGE (\d+) ---$/gm)].map((m) => Number(m[1]));
+  return [...new Set(nums)];
+}
+
 /** Runs `fn` over items with at most `limit` in flight, keeping result order. */
 async function mapLimit<T, R>(
   items: T[],
@@ -331,9 +344,13 @@ export async function extractRisksWithModel(
     return { output, model: provider.model };
   }
 
-  // Split the whole document into chunks so no page is silently left out.
-  const chunks = chunkPagesForAgent(pages);
+  // Split the whole document into chunks so no page is silently left out. Parts stay small:
+  // gpt-oss reasons in proportion to its input, and a 28k-character part could spend the
+  // whole token budget reasoning and return nothing (seen on the 15-page HUD lease).
+  const chunks = chunkPagesForAgent(pages, PART_CHARS);
   if (chunks.length === 0) return { output: { findings: [] }, model: provider.model };
+  // Opt-in speed/recall trade for reasoning models: "low" ran ~2.5x faster but found fewer clauses.
+  const reasoningEffort = provider.name === "nrp" ? process.env.NRP_REASONING_EFFORT : undefined;
 
   const runChunk = async (context: string, i: number): Promise<RiskFinding[] | null> => {
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -347,7 +364,9 @@ export async function extractRisksWithModel(
       const completion = await client.chat.completions.create({
         model: provider.model,
         temperature: 0.1,
-        max_tokens: 4000,
+        // Reasoning tokens count against this cap; leave room for the JSON after them.
+        max_tokens: MAX_OUTPUT_TOKENS,
+        ...(reasoningEffort ? { reasoning_effort: reasoningEffort as "low" | "medium" | "high" } : {}),
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: AGENT_PERSONA },
@@ -360,12 +379,13 @@ export async function extractRisksWithModel(
       const parsed = parseModelJson(completion.choices[0]?.message?.content ?? "");
       const found = parsed ? validFindings(parsed) : null;
       const tokens = completion.usage?.total_tokens;
+      const why = completion.choices[0]?.finish_reason === "length" ? "ran out of room" : "unusable reply";
       await events.emit(
         "extractor",
         "progress",
         found
           ? `Part ${i + 1} of ${chunks.length}: proposed ${found.length} risks`
-          : `Part ${i + 1} of ${chunks.length}: unusable reply${attempt === 0 ? ", retrying" : ""}`,
+          : `Part ${i + 1} of ${chunks.length}: ${why}${attempt === 0 ? ", retrying" : ""}`,
         {
           provider: provider.name,
           model: provider.model,
@@ -381,9 +401,20 @@ export async function extractRisksWithModel(
     return null;
   };
 
-  const results = await mapLimit(chunks, 3, runChunk);
+  const results = await mapLimit(chunks, PARALLEL_PARTS, runChunk);
   if (results.every((r) => r === null)) {
     throw new Error("The model returned unusable output. Please try again.");
+  }
+  // Never let a partly-read document look complete.
+  const unread = chunks.flatMap((c, i) => (results[i] === null ? chunkPageNumbers(c) : []));
+  if (unread.length) {
+    await events.emit(
+      "extractor",
+      "progress",
+      `Warning: the model could not read page${unread.length === 1 ? "" : "s"} ${unread.join(", ")}; ` +
+        "risks on those pages were not checked",
+      { provider: provider.name, model: provider.model, skippedPages: unread.length }
+    );
   }
   const findings = dedupeFindings(results.flatMap((r) => r ?? []));
   return { output: { findings }, model: provider.model };

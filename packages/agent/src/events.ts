@@ -140,6 +140,7 @@ const FEED_DATA_KEYS = [
   "step",
   "hits",
   "severityRaised",
+  "skippedPages",
   "scanDone",
   "scanFailed",
 ] as const;
