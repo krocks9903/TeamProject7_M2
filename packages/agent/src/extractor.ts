@@ -33,7 +33,12 @@ export async function runExtractorAgent(input: {
   const ctx = await runExtractorReasoning(input.documentId, input.pages);
   // Messages carry only our own queries and page numbers; chunk text stays in data (not in the public feed).
   for (const [i, step] of ctx.reasoning_trace.entries()) {
-    const where = step.pages?.length ? `pages ${step.pages.join(", ")}` : "no matches";
+    // Search steps list their pages; the final synthesis step has none and reports its own summary.
+    const where = !step.pages
+      ? step.observation
+      : step.pages.length
+        ? `pages ${step.pages.join(", ")}`
+        : "no matches";
     await events.emit("extractor", "progress", `Step ${i + 1}: ${step.action} → ${where}`, {
       step: i + 1,
       hits: step.pages?.length ?? 0,

@@ -14,6 +14,7 @@ import {
   validateCitations,
   resolveProvider,
 } from "@fineprint/agent";
+import { collapseSpacedLetters } from "@fineprint/mcp-document";
 import type { DocumentPage, HandoffPayload } from "@fineprint/shared";
 
 process.env.MODEL_PROVIDER = "mock";
@@ -140,5 +141,36 @@ describe("M3 multi-agent handoff", () => {
       SAMPLE_PAGES
     );
     assert.ok(!grounded.some((f) => /99999/.test(f.quote)));
+  });
+});
+
+// Regressions from the first live NRP run (gym membership contract, Oct 28).
+describe("M3 live-run regressions", () => {
+  it("collapses letter-spaced headings without gluing ordinary words", () => {
+    assert.equal(collapseSpacedLetters("E a r l y T e r m"), "Early Term");
+    assert.equal(
+      collapseSpacedLetters("renew at the end of a one-year period"),
+      "renew at the end of a one-year period"
+    );
+    assert.equal(
+      collapseSpacedLetters("Tenant shall pay a returned-payment charge"),
+      "Tenant shall pay a returned-payment charge"
+    );
+  });
+
+  it("keeps short fee lines and ignores a trailing period the PDF lacks", () => {
+    const pages: DocumentPage[] = [
+      { page: 1, text: "ENROLLMENT FEE: $150.00 CARD FEE: $10.00 INITIAL MONTHLY DUES: $45.00" },
+    ];
+    const base = { risk_type: "fee_trap" as const, severity: "medium" as const, plain_english: "x", page: 1 };
+    const kept = validateCitations(
+      [
+        { ...base, quote: "ENROLLMENT FEE: $150.00." },
+        { ...base, quote: "CARD FEE: $10.00." },
+        { ...base, quote: "ENROLLMENT FEE: $250.00." },
+      ],
+      pages
+    );
+    assert.deepEqual(kept.map((f) => f.quote), ["ENROLLMENT FEE: $150.00", "CARD FEE: $10.00"]);
   });
 });

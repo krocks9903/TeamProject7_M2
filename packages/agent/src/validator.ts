@@ -45,7 +45,7 @@ export function validateCitationsDetailed(
     const drop = (reason: string) =>
       dropped.push({ quote: f.quote ?? "", page: f.page, reason });
     const pageText = byPage.get(f.page);
-    const quote = normalizeWhitespace(cleanText(f.quote ?? ""));
+    let quote = normalizeWhitespace(cleanText(f.quote ?? ""));
     if (!pageText) {
       drop("page missing or unreadable");
       continue;
@@ -54,12 +54,21 @@ export function validateCitationsDetailed(
       drop("quote length out of range");
       continue;
     }
-    if (letterShare(quote) < 0.6) {
+    // Digits are neutral: short fee lines ("card fee: $10.00") are mostly numbers, not garbled glyphs.
+    if (letterShare(quote.replace(/\d/g, "")) < 0.6) {
       drop("quote is mostly symbols");
       continue;
     }
     const pageLower = pageText.toLowerCase();
-    const start = pageLower.indexOf(quote);
+    let start = pageLower.indexOf(quote);
+    if (start < 0) {
+      // Models often close a clause with punctuation the PDF lacks ("FEE: $150.00."); dropping it adds nothing.
+      const trimmed = quote.replace(/[.,;:]+$/, "");
+      if (trimmed.length >= 8) {
+        start = pageLower.indexOf(trimmed);
+        if (start >= 0) quote = trimmed;
+      }
+    }
     if (start < 0) {
       drop("not in document");
       continue;

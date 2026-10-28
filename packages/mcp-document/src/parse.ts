@@ -9,9 +9,10 @@ import type { DocumentPage, ParseResult } from "@fineprint/shared";
 /**
  * PDFs often draw titles as spaced glyphs ("E a r l y T e r m").
  * Collapse letter-spacing but keep a space before a new Capital letter (new word).
+ * Word boundaries keep ordinary prose intact: "end of a one-year" must not become "ofaone-year".
  */
 export function collapseSpacedLetters(text: string): string {
-  return text.replace(/(?:[A-Za-z] ){2,}[A-Za-z]/g, (run) => {
+  return text.replace(/\b(?:[A-Za-z] ){2,}[A-Za-z]\b/g, (run) => {
     const parts = run.split(" ");
     if (!parts.every((p) => p.length === 1)) return run;
     let out = parts[0] ?? "";
