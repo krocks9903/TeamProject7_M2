@@ -137,6 +137,9 @@ const FEED_DATA_KEYS = [
   "kept",
   "dropped",
   "findings",
+  "step",
+  "hits",
+  "severityRaised",
   "scanDone",
   "scanFailed",
 ] as const;

@@ -8,11 +8,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @fineprint/shared && npm run build -w @fineprint/mcp-document && npm run build -w @fineprint/agent && npm run build -w @fineprint/web",
-    "dev": "npm run build -w @fineprint/shared && npm run build -w @fineprint/mcp-document && npm run build -w @fineprint/agent && npm run dev -w @fineprint/web",
-    "test": "npm run build -w @fineprint/shared && npm run build -w @fineprint/mcp-document && npm run build -w @fineprint/agent && node --import tsx --test tests/**/*.test.ts",
+    "build": "npm run build -w @fineprint/shared && npm run build -w @fineprint/mcp-document && npm run build -w @fineprint/mcp-mailbox && npm run build -w @fineprint/agent && npm run build -w @fineprint/web",
+    "dev": "npm run build -w @fineprint/shared && npm run build -w @fineprint/mcp-document && npm run build -w @fineprint/mcp-mailbox && npm run build -w @fineprint/agent && npm run dev -w @fineprint/web",
+    "test": "npm run build -w @fineprint/shared && npm run build -w @fineprint/mcp-document && npm run build -w @fineprint/mcp-mailbox && npm run build -w @fineprint/agent && node --import tsx --test tests/**/*.test.ts",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "mcp:document": "npm run start -w @fineprint/mcp-document"
+    "mcp:document": "npm run start -w @fineprint/mcp-document",
+    "mcp:mailbox": "npm run start -w @fineprint/mcp-mailbox",
+    "mcp:rebuild": "npm run build -w @fineprint/shared && npm run build -w @fineprint/mcp-document && npm run build -w @fineprint/mcp-mailbox"
   },
   "engines": {
     "node": ">=20"

@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@fineprint/mcp-document": "*",
+    "@fineprint/mcp-mailbox": "*",
     "@fineprint/shared": "*",
     "openai": "^4.91.1",
     "zod": "^3.24.2"

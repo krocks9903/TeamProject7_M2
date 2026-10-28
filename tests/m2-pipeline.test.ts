@@ -30,6 +30,13 @@ describe("MCP document_parse", () => {
     assert.match(blob, /early termination fee/i);
     assert.match(blob, /renews automatically/i);
   });
+
+  it("parses every fixture from a pooled Node Buffer (pdf.js Buffer regression)", async () => {
+    for (const lines of [FIXTURE_GYM_LINES, FIXTURE_TRAP_LINES, FIXTURE_LEASE_LINES]) {
+      const result = await parsePdfBuffer(await buildSimplePdf(lines));
+      assert.match(result.pages[0]?.text ?? "", /AGREEMENT/);
+    }
+  });
 });
 
 describe("citation validator", () => {

@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "fineprint-document": {
+      "type": "stdio",
+      "command": "/ABSOLUTE/PATH/TO/node",
+      "args": [
+        "/ABSOLUTE/PATH/TO/FInePrint-Agent/packages/mcp-document/dist/server.js"
+      ]
+    },
+    "fineprint-mailbox": {
+      "type": "stdio",
+      "command": "/ABSOLUTE/PATH/TO/node",
+      "args": [
+        "/ABSOLUTE/PATH/TO/FInePrint-Agent/packages/mcp-mailbox/dist/server.js"
+      ]
+    }
+  }
+}

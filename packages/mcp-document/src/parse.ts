@@ -7,6 +7,36 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { DocumentPage, ParseResult } from "@fineprint/shared";
 
 /**
+ * PDFs often draw titles as spaced glyphs ("E a r l y T e r m").
+ * Collapse letter-spacing but keep a space before a new Capital letter (new word).
+ */
+export function collapseSpacedLetters(text: string): string {
+  return text.replace(/(?:[A-Za-z] ){2,}[A-Za-z]/g, (run) => {
+    const parts = run.split(" ");
+    if (!parts.every((p) => p.length === 1)) return run;
+    let out = parts[0] ?? "";
+    for (let i = 1; i < parts.length; i++) {
+      const ch = parts[i] ?? "";
+      const prev = parts[i - 1] ?? "";
+      if (/[A-Z]/.test(ch) && /[a-z]/.test(prev)) out += ` ${ch}`;
+      else out += ch;
+    }
+    return out;
+  });
+}
+
+export function normalizePageText(text: string): string {
+  let t = collapseSpacedLetters(text.replace(/\s+/g, " ")).trim();
+  // Repair common glue from "a" + letter-spaced word ("Lessoramonthly", "remitarecurring").
+  t = t.replace(
+    /\b(Lessor|Lessee|Tenant|Landlord|shall|pay|remit)a(monthly|recurring)\b/gi,
+    "$1 a $2"
+  );
+  t = t.replace(/([a-z])a(monthly|recurring)\b/gi, "$1 a $2");
+  return t.replace(/\s+/g, " ").trim();
+}
+
+/**
  * Parse a PDF buffer into per-page text suitable for citation checks.
  *
  * Uses pdfjs-dist directly instead of the `pdf-parse` package: pdf-parse
@@ -23,8 +53,11 @@ export async function parsePdfBuffer(buffer: Buffer): Promise<ParseResult> {
     };
   }
 
+  // pdf.js misreads Node Buffers (reads the wrong backing bytes); hand it a plain, standalone Uint8Array.
+  const bytes = new Uint8Array(buffer.byteLength);
+  bytes.set(buffer);
   const loadingTask = getDocument({
-    data: new Uint8Array(buffer),
+    data: bytes,
     useSystemFonts: true,
   });
 
@@ -34,11 +67,9 @@ export async function parsePdfBuffer(buffer: Buffer): Promise<ParseResult> {
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
       const content = await page.getTextContent();
-      const text = content.items
-        .map((item) => ("str" in item ? item.str : ""))
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim();
+      const text = normalizePageText(
+        content.items.map((item) => ("str" in item ? item.str : "")).join(" ")
+      );
       pages.push({ page: i, text });
     }
 

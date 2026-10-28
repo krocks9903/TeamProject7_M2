@@ -7,13 +7,17 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { readFile } from "node:fs/promises";
-import { MCP_TOOL_DOCUMENT_PARSE } from "@fineprint/shared";
+import {
+  MCP_TOOL_DOCUMENT_PARSE,
+  MCP_TOOL_DOCUMENT_SEARCH,
+} from "@fineprint/shared";
 import { parsePdfBuffer } from "./parse.js";
+import { searchDocumentChunks } from "./retrieve.js";
 
 export function createDocumentMcpServer(): McpServer {
   const server = new McpServer({
     name: "fineprint-document",
-    version: "0.2.0",
+    version: "0.3.0",
   });
 
   server.tool(
@@ -32,6 +36,29 @@ export function createDocumentMcpServer(): McpServer {
           {
             type: "text" as const,
             text: JSON.stringify(result),
+          },
+        ],
+      };
+    }
+  );
+
+  server.tool(
+    MCP_TOOL_DOCUMENT_SEARCH,
+    "Search chunked document text (knowledge layer) for stipulation / payment language. Requires a prior FinePrint scan that wrote chunks for document_id.",
+    {
+      document_id: z.string().describe("Document id from a FinePrint scan"),
+      query: z
+        .string()
+        .describe("Search query, e.g. early termination OR monthly rent"),
+      top_k: z.number().int().positive().optional(),
+    },
+    async ({ document_id, query, top_k }) => {
+      const hits = await searchDocumentChunks(document_id, query, top_k ?? 6);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({ document_id, query, hits }),
           },
         ],
       };

@@ -1,5 +1,6 @@
 export {
   AGENT_PERSONA,
+  clipMoneyQuote,
   dedupeFindings,
   extractRisksWithModel,
   mockExtractRisks,
@@ -28,3 +29,16 @@ export {
   type EventSink,
   type ScanEmitter,
 } from "./events.js";
+export { extractDeadlineEvents } from "./deadlines.js";
+export { triageEmail, triageEmailBodyMock } from "./emailTriage.js";
+export { runExtractorAgent } from "./extractor.js";
+export { runRankerAgent } from "./ranker.js";
+export { runExtractorReasoning } from "./reasoning.js";
+export {
+  STIPULATION_PATTERNS,
+  chunkPages,
+  searchChunks,
+  getKnowledgeStore,
+  resetKnowledgeStoreForTests,
+  DEFAULT_RETRIEVAL_QUERIES,
+} from "./knowledge.js";

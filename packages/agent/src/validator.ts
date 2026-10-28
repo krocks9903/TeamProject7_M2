@@ -101,7 +101,12 @@ const ORDER: Record<string, number> = {
 };
 
 export function rankFindings(findings: RiskFinding[]): RiskFinding[] {
-  return [...findings].sort(
-    (a, b) => (ORDER[a.severity] ?? 9) - (ORDER[b.severity] ?? 9)
-  );
+  return [...findings].sort((a, b) => {
+    const sev = (ORDER[a.severity] ?? 9) - (ORDER[b.severity] ?? 9);
+    if (sev !== 0) return sev;
+    // Traps before expected payment lines when severity ties.
+    const aPay = a.risk_type === "payment_obligation" ? 1 : 0;
+    const bPay = b.risk_type === "payment_obligation" ? 1 : 0;
+    return aPay - bPay;
+  });
 }

@@ -13,6 +13,7 @@ const nextConfig = {
     "@fineprint/shared",
     "@fineprint/agent",
     "@fineprint/mcp-document",
+    "@fineprint/mcp-mailbox",
   ],
   serverExternalPackages: ["pdfjs-dist"],
 };

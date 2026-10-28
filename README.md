@@ -6,7 +6,7 @@ An AI agent that reads an important document and tells you the specific ways it 
 CEN 4930 AI Agent Studio · Florida Gulf Coast University · Fall 2026  
 Instructor: Dr. Vinod Kumar Ahuja
 
-**Status:** Milestone 2 architecture + vertical slice on branch `main`.
+**Status:** Milestone 3 — two-agent pipeline (Extractor → Ranker) running on `main`. Open items are listed in [docs/M3-REMAINING.md](docs/M3-REMAINING.md).
 
 ---
 
@@ -16,42 +16,60 @@ People sign leases, service contracts, insurance and loan paperwork without read
 
 Upload the PDF. Get a short ranked list of money-loss risks, each quoting the exact sentence and page. Not a summary — a grounded risk list.
 
-## What the agent can do right now
+## How a scan works
 
-- Accept a PDF upload in the Next.js UI (`apps/web`)
-- Parse the file through MCP tool `document_parse` (page-mapped text)
-- Extract candidate risks (NRP / Anthropic when configured; **mock extractor offline**)
-- **Drop any finding whose quote is not in the source text** (citation validator)
-- Return ranked grounded findings via `GET /api/scans/:id`
-- Run three automated test cases including a hallucination trap
+```
+PDF upload ─► document_parse (MCP) ─► Extractor agent ─────────────────────────► Ranker agent ─► ranked findings
+                                       1. chunk pages into the knowledge store       severity floors per risk type
+                                       2. ReAct loop: document_search per query      plain-English rewrite
+                                       3. model extracts findings with quotes        cannot add findings or edit quotes
+                                       4. citation check drops unquoted findings
+                                       └── HandoffPayload: findings + reasoning trace + dropped quotes
+```
+
+Every step emits a live event. The scan screen and **Mission Control** (`/mission-control`) show each agent working in real time.
+
+## CHANGES (M2 → M3)
+
+- **Multi-agent:** the single extraction pass is now an **Extractor** agent and a **Ranker** agent joined by a typed `HandoffPayload` (`packages/shared`). The handoff fires once the Extractor's findings pass the citation check; the payload carries grounded findings, the reasoning trace, the proposed count and every dropped quote.
+- **Reasoning pattern:** ReAct-style retrieval trace on the Extractor (`packages/agent/src/reasoning.ts`). Each step records thought → `document_search` action → observation (pages and pattern hits). The search queries are a fixed list today; the model does not choose them yet.
+- **Knowledge layer:** pages are chunked into a local chunk store with a stipulation pattern library (`packages/agent/src/knowledge.ts`, `packages/mcp-document/src/retrieve.ts`), searchable through the new MCP tool `document_search`. Retrieval tags findings with `pattern_hits`; the model still reads every page (retrieval does not narrow the prompt yet).
+- **Guardrails:** citation validator fails closed and its drops are reported live; the Ranker can only raise severity, never lower it, and cannot add findings or change quotes; PDF-only upload with a size cap; the prompt treats document text as data.
+- **New risk type:** `payment_obligation` for expected amounts (rent, retainers, hourly rates), separate from trap clauses.
+- **Live events + Mission Control:** per-scan event stream (`/api/scans/:id/events`) and a sanitized global feed that never contains document text.
+- **Parsing:** `pdfjs-dist` instead of `pdf-parse`; letter-spaced headings are collapsed; unreadable (symbol-font) pages are detected and skipped.
+- **Fixture mailbox MCP** (`packages/mcp-mailbox`) and inbox/calendar API routes for deadline demos — fixture data only, no Gmail OAuth.
+- **Planned, not live:** pgvector embeddings (`supabase/migrations/20261026_m3_chunks.sql` is written but not applied), Supabase storage path, auth UI.
+- `PROMPT_VERSION` is `m3.v3`; cached scans from older prompts are not reused.
 
 ## What is intentionally not implemented yet
 
 - Legal advice or enforceability opinions
 - Negotiation / redlining
-- Multi-agent extractor → ranker (M3)
-- Supabase pgvector retrieval (M3); local `./data` store is the M2 default
-- Background worker fleet (sync path for demo-sized PDFs)
+- Gmail OAuth (fixture mailbox only)
+- Embedding search (keyword retrieval is live; pgvector migration is written but unused)
+- Background worker fleet (scans run in the web process)
 
-## Architecture (teammate map)
+## Repository map
 
-See **[docs/architecture.md](docs/architecture.md)** and **[docs/TEAM_OWNERSHIP.md](docs/TEAM_OWNERSHIP.md)**.
+See **[docs/architecture.md](docs/architecture.md)**, **[docs/m3-eval-plan.md](docs/m3-eval-plan.md)**, **[docs/m3-cost-analysis.md](docs/m3-cost-analysis.md)**, **[docs/user-testing-script.md](docs/user-testing-script.md)**.
 
 ```
-apps/web/                 Next.js UI + API (Diego lane)
-packages/shared/          Shared types / contracts (Nolan lane)
-packages/mcp-document/    MCP document_parse (Nolan lane)
-packages/agent/           Provider, persona, orchestrator, validator (Krish lane)
-supabase/migrations/      RLS schema for cloud path (Diego lane)
-tests/                    Graded M2 cases (Nolan lane)
-docs/                     Architecture + contributing
+apps/web/                 Next.js UI + API, Mission Control (Diego lane)
+packages/shared/          Shared types / contracts, HandoffPayload (Nolan lane)
+packages/mcp-document/    document_parse + document_search MCP server (Nolan lane)
+packages/mcp-mailbox/     Fixture inbox / calendar MCP
+packages/agent/           Extractor, Ranker, knowledge, reasoning, orchestrator, events (Krish lane)
+supabase/migrations/      RLS schema + M3 chunks table (Diego lane)
+tests/                    M2 + M3 cases (Nolan lane)
+docs/                     Architecture, eval, cost, user testing
 ```
 
 ## Setup (no cloud required)
 
 ```bash
-git clone https://github.com/krocks9903/TeamProject7_M2.git
-cd TeamProject7_M2
+git clone https://github.com/krocks9903/TeamProject7_M3.git
+cd TeamProject7_M3
 cp .env.example .env
 npm install
 npm test
@@ -70,26 +88,30 @@ NRP_API_KEY=...
 
 Ask GroupMe for endpoint values. Never commit `.env`.
 
-### Supabase (optional for M2)
+### Supabase (optional)
 
-Apply `supabase/migrations/20260921_m2_init.sql`, set `STORAGE_BACKEND=supabase` and keys. Until then the orchestrator uses the local JSON store under `./data` (gitignored).
+Apply `supabase/migrations/20260921_m2_init.sql` then `20261026_m3_chunks.sql`. Set `STORAGE_BACKEND=supabase` and keys. Until then the orchestrator uses `./data` (gitignored); knowledge chunks live under `./data/knowledge`.
 
 ## Known limitations
 
-1. **Sync path on Vercel** — large PDFs can hit serverless timeouts; M3 may move processing to a worker.
-2. **Mock provider** — keyword heuristics for offline/CI; switch to NRP for demos.
-3. **No legal advice** — quotes only; citation validation fails closed on invented fees.
-4. **Demo owner** — M2 uses `DEMO_OWNER_ID` instead of full Auth UI (migrations already define RLS).
+1. **Mock provider is keyword matching.** It exists for CI and offline work; real results need `MODEL_PROVIDER=nrp`.
+2. **ReAct loop is scripted.** Retrieval queries are a fixed list, and retrieval does not yet narrow what the model reads.
+3. **Ranker is rule-based.** It applies severity floors and plain-English templates; it does not call a model.
+4. **Keyword retrieval misses paraphrases.** Embeddings are planned for M4.
+5. **Knowledge store is one JSON file** with no locking — fine for demos, not for concurrent uploads.
+6. **Scans run in the web process** — large PDFs can hit serverless timeouts on Vercel.
+7. **No legal advice** — quotes only; citation validation fails closed on invented fees.
+8. **Demo owner** — uses `DEMO_OWNER_ID` until the auth UI exists.
 
 ## Stack
 
 | Layer | Choice |
 |---|---|
 | Model | NRP `gpt-oss` (OpenAI-compatible); Anthropic fallback; `mock` for tests |
-| Agent | `@fineprint/agent` orchestrator + citation validator |
-| MCP | `document_parse` in `@fineprint/mcp-document` |
-| Front end | Next.js App Router |
-| Data | Local store (M2 default) / Supabase Postgres + Storage |
+| Agents | Extractor (ReAct retrieval + extract + citation check) → Ranker |
+| MCP | `document_parse`, `document_search`; fixture mailbox server |
+| Front end | Next.js App Router, live scan events, Mission Control |
+| Data | Local store default / Supabase Postgres + Storage (migrations written) |
 
 ## Milestones
 

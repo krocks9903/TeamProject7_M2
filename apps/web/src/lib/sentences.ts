@@ -13,6 +13,7 @@ export type RiskKey =
   | "liability_shift"
   | "mandatory_arbitration"
   | "fee_trap"
+  | "payment_obligation"
   | "other";
 
 const RISK_PATTERNS: Record<RiskKey, RegExp | null> = {
@@ -24,6 +25,7 @@ const RISK_PATTERNS: Record<RiskKey, RegExp | null> = {
   liability_shift: /responsible|liab|expense|indemn/i,
   mandatory_arbitration: /arbitrat|jury/i,
   fee_trap: /\bfees?\b|charge|\$/i,
+  payment_obligation: /\$|rent|retainer|per (?:hour|month)|payable/i,
   other: null,
 };
 

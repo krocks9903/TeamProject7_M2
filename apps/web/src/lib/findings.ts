@@ -18,6 +18,7 @@ export const RISK_LABELS: Record<RiskType, string> = {
   liability_shift: "Liability",
   mandatory_arbitration: "Arbitration",
   fee_trap: "Hidden fee",
+  payment_obligation: "Payment",
   other: "Other",
 };
 
@@ -163,6 +164,7 @@ export const RISK_PLAIN: Record<RiskType, string> = {
   liability_shift: "Costs and repairs that fall on you.",
   mandatory_arbitration: "Disputes that can't go to court.",
   fee_trap: "Extra fees and charges buried in the text.",
+  payment_obligation: "Scheduled amounts you agree to pay, like rent or retainers.",
   other: "Anything else that can cost you money.",
 };
 

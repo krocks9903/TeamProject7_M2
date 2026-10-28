@@ -1,6 +1,7 @@
 /**
- * Scan orchestrator — state machine:
- * queued → parsing → analyzing → validating → done | failed
+ * Scan orchestrator — M3 multi-agent pipeline:
+ * queued → parsing → analyzing (Extractor: ReAct retrieval + extract + citation check)
+ *        → validating (Ranker: severity + plain_english; quotes frozen) → done | failed
  *
  * Every real step also emits a ScanEvent (see events.ts) for Mission Control.
  *
@@ -17,10 +18,11 @@ import {
 } from "@fineprint/shared";
 import { parsePdfBuffer, unreadablePages } from "@fineprint/mcp-document";
 import { EventEmitter, TeeSink } from "./events.js";
-import { extractRisksWithModel } from "./persona.js";
+import { runExtractorAgent } from "./extractor.js";
+import { getKnowledgeStore } from "./knowledge.js";
 import { resolveProvider } from "./provider.js";
+import { runRankerAgent } from "./ranker.js";
 import { getStore, sha256, type LocalStore } from "./store.js";
-import { rankFindings, validateCitationsDetailed } from "./validator.js";
 
 export interface UploadInput {
   ownerId: string;
@@ -98,6 +100,8 @@ export class Orchestrator {
         );
         const pages = await parsePdfBuffer(input.buffer);
         await this.store.setPages(doc.id, pages.pages);
+        // New document id: re-chunk so document_search works for the cached copy too.
+        await getKnowledgeStore().replaceDocumentChunks(doc.id, pages.pages);
         await this.store.updateScanStatus(scan.id, "done");
         await events.emit(
           "intake",
@@ -191,76 +195,64 @@ export class Orchestrator {
       { pageCount: parsed.meta.pageCount, unreadablePages: unreadable }
     );
 
+    // Agent 1 — Extractor (ReAct retrieval + structured extract + citation check)
     phase("extractor");
     await this.store.updateScanStatus(scanId, "analyzing");
     const provider = resolveProvider();
-    await events.emit("extractor", "start", `Reading for risky clauses with ${provider.model}`, {
-      provider: provider.name,
-      model: provider.model,
+    const handoff = await runExtractorAgent({
+      documentId: scan.document_id,
+      scanId,
+      pages: parsed.pages,
+      provider,
+      events,
     });
-    const extractStart = Date.now();
-    const { output, model } = await extractRisksWithModel(provider, parsed.pages, events);
-    await events.emit(
-      "extractor",
-      "finish",
-      `Proposed ${output.findings.length} risk${output.findings.length === 1 ? "" : "s"}`,
-      {
-        provider: provider.name,
-        model,
-        latencyMs: Date.now() - extractStart,
-        proposed: output.findings.length,
-      }
-    );
 
-    phase("validator");
+    // Agent 2 — Ranker (rewrite/rank only; quotes frozen)
+    phase("ranker");
     await this.store.updateScanStatus(scanId, "validating");
     await events.emit(
-      "validator",
+      "ranker",
       "start",
-      `Checking ${output.findings.length} quotes against the document`
+      `Handoff from Extractor: ${handoff.findings.length} grounded risks, ` +
+        `${handoff.reasoning_trace.length} reasoning steps`,
+      { kept: handoff.findings.length }
     );
-    const { kept, dropped } = validateCitationsDetailed(output.findings, parsed.pages);
-    for (const d of dropped) {
-      await events.emit("validator", "progress", `Not in document: "${d.quote}"`, {
-        droppedQuote: d,
-      });
-    }
-    await events.emit(
-      "validator",
-      "finish",
-      dropped.length
-        ? `Kept ${kept.length}, threw out ${dropped.length} I couldn't find in the document`
-        : `Kept all ${kept.length}: every quote found in the document`,
-      { kept: kept.length, dropped: dropped.length, droppedQuotes: dropped }
-    );
-
-    phase("ranker");
-    await events.emit("ranker", "start", `Ranking ${kept.length} risks by severity`);
-    const grounded = rankFindings(kept);
+    const { findings, handoff: rankedHandoff, severity_raised } = runRankerAgent(handoff);
     await this.store.replaceFindings(
       scanId,
-      grounded.map((f) => ({
+      findings.map((f) => ({
         ...f,
         grounded: true as const,
       }))
     );
 
-    // Keep model label accurate on the scan row
-    scan.model = model;
     await this.store.updateScanStatus(scanId, "done");
-    await events.emit("ranker", "finish", `Ranked ${grounded.length} risks, scan complete`, {
-      ranked: grounded.length,
-      findings: grounded.length,
-      scanDone: true,
-    });
+    await events.emit(
+      "ranker",
+      "finish",
+      `Ranked ${findings.length} risks` +
+        (severity_raised ? `, raised severity on ${severity_raised}` : "") +
+        ", scan complete",
+      {
+        ranked: findings.length,
+        findings: findings.length,
+        severityRaised: severity_raised,
+        scanDone: true,
+      }
+    );
 
     console.info(
       JSON.stringify({
         event: "scan_done",
         scan_id: scanId,
-        model,
-        finding_count: grounded.length,
+        // scan.model stays the provider model: the content-hash cache keys on it.
+        model: `${rankedHandoff.extractor_model}+ranker`,
+        finding_count: findings.length,
         page_count: parsed.meta.pageCount,
+        reasoning_steps: rankedHandoff.reasoning_trace.length,
+        proposed: rankedHandoff.proposed_count,
+        dropped: rankedHandoff.dropped_quotes?.length ?? 0,
+        agents: ["extractor", "ranker"],
       })
     );
   }
